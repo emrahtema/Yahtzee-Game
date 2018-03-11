@@ -1,2 +1,2 @@
-# Yahtzee-Server-Clients
+# Yahtzee Server Clients
 The First Project of Computer Networks.

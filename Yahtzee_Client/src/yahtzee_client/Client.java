@@ -1,5 +1,11 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package yahtzee_client;
 
+import game.Message;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,24 +13,55 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static yahtzee_client.Client.sInput;
+import game.Yahtzee;
 
+/**
+ *
+ * @author INSECT
+ */
+// serverdan gelecek mesajları dinleyen thread
 class Listen extends Thread {
-        public void run() {
 
-            while (true) {
-                try {
+    public void run() {
+        //soket bağlı olduğu sürece dön
+        while (Client.socket.isConnected()) {
+            try {
+                //mesaj gelmesini bloking olarak dinyelen komut
+                Message received = (Message) (sInput.readObject());
+                //mesaj gelirse bu satıra geçer
+                //mesaj tipine göre yapılacak işlemi ayır.
+                switch (received.type) {
+                    case Startt:
+                        break;
+                    case RivalConnected:
+                        Yahtzee.ThisGame.durum.setText(received.content.toString());
+                        Yahtzee.ThisGame.tmr_slider.start();
+                        break;
+                    case Disconnect:
+                        break;
+                    case Selected:
+                        Yahtzee.ThisGame.islem = received.content.toString();
+                        break;
+                    case Bitis:
+                        break;
 
-                    Client.Display(sInput.readObject().toString());
-                    Client.Send("İyiyim!");
-                } catch (IOException ex) {
-                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
 
+            } catch (IOException ex) {
+
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                //Client.Stop();
+                break;
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                //Client.Stop();
+                break;
+            }
         }
+
     }
+}
+
 public class Client {
 
     //her clientın bir soketi olmalı
@@ -34,7 +71,9 @@ public class Client {
     public static ObjectInputStream sInput;
     //verileri göndermek için gerekli nesne
     public static ObjectOutputStream sOutput;
+    //serverı dinleme thredi 
     public static Listen listenMe;
+
     public static void Start(String ip, int port) {
         try {
             // Client Soket nesnesi
@@ -46,22 +85,47 @@ public class Client {
             Client.sOutput = new ObjectOutputStream(Client.socket.getOutputStream());
             Client.listenMe = new Listen();
             Client.listenMe.start();
-
+            
+            //ilk mesaj olarak isim gönderiyorum
+//            Message msg = new Message(Message.Message_Type.Name);
+//            msg.content = Game.ThisGame.txt_name.getText();
+//            Client.Send(msg);
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    //client durdurma fonksiyonu
+    public static void Stop() {
+        try {
+            if (Client.socket != null) {
+                Client.listenMe.stop();
+                Client.socket.close();
+                Client.sOutput.flush();
+                Client.sOutput.close();
+
+                Client.sInput.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     public static void Display(String msg) {
 
         System.out.println(msg);
 
     }
-    public static void Send(Object message)
-    {
+
+    //mesaj gönderme fonksiyonu
+    public static void Send(Message msg) {
         try {
-            Client.sOutput.writeObject(message.toString());
+            Client.sOutput.writeObject(msg);
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
+
 }

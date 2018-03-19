@@ -37,6 +37,7 @@ public class Yahtzee extends javax.swing.JFrame {
     public int islemSirasi=1;
     private boolean sira=false;
     Operations op;
+    private int ustPuanSayac = 0;
     
     @Override
     public void paint(Graphics g) {
@@ -123,7 +124,6 @@ public class Yahtzee extends javax.swing.JFrame {
     public void zarlara_gore_puanlari_getir(){
         op = new Operations();
         int[] puanlar = op.puanlariGetir(zarlarinDegerleri);
-        System.out.println("okey geldi puanlar");
         if(skor[0] == -1){
             benpuan1.setText(String.valueOf(puanlar[0]));
             benpuan1.setBackground(Color.yellow);
@@ -279,6 +279,119 @@ public class Yahtzee extends javax.swing.JFrame {
         rakipzar3.setIcon(zar_resimleri[0]);
         rakipzar4.setIcon(zar_resimleri[0]);
         rakipzar5.setIcon(zar_resimleri[0]);
+    }
+    
+    public void puani_ekle(int puan,int index){
+        skor[index] = puan;
+        
+        if(skor[0] == -1){
+            benpuan1.setText("");
+            benpuan1.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 0){
+            benpuan1.setBackground(Color.green);
+        }
+        if(skor[1] == -1){
+            benpuan2.setText("");
+            benpuan2.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 1){
+            benpuan2.setBackground(Color.green);
+        }
+        if(skor[2] == -1){
+            benpuan3.setText("");
+            benpuan3.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 2){
+            benpuan3.setBackground(Color.green);
+        }
+        if(skor[3] == -1){
+            benpuan4.setText("");
+            benpuan4.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 3){
+            benpuan4.setBackground(Color.green);
+        }
+        if(skor[4] == -1){
+            benpuan5.setText("");
+            benpuan5.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 4){
+            benpuan5.setBackground(Color.green);
+        }
+        if(skor[5] == -1){
+            benpuan6.setText("");
+            benpuan6.setBackground(Color.white);
+            ustPuanSayac++;
+        }else if(index == 5){
+            benpuan6.setBackground(Color.green);
+        }
+        if(skor[7] == -1){
+            benpuan8.setText("");
+            benpuan8.setBackground(Color.white);
+        }else if(index == 7){
+            benpuan8.setBackground(Color.green);
+        }
+        if(skor[8] == -1){
+            benpuan9.setText("");
+            benpuan9.setBackground(Color.white);
+        }else if(index == 8){
+            benpuan9.setBackground(Color.green);
+        }
+        if(skor[9] == -1){
+            benpuan10.setText("");
+            benpuan10.setBackground(Color.white);
+        }else if(index == 9){
+            benpuan10.setBackground(Color.green);
+        }
+        if(skor[10] == -1){
+            benpuan11.setText("");
+            benpuan11.setBackground(Color.white);
+        }else if(index == 10){
+            benpuan11.setBackground(Color.green);
+        }
+        if(skor[11] == -1){
+            benpuan12.setText("");
+            benpuan12.setBackground(Color.white);
+        }else if(index == 11){
+            benpuan12.setBackground(Color.green);
+        }
+        if(skor[12] == -1){
+            benpuan13.setText("");
+            benpuan13.setBackground(Color.white);
+        }else if(index == 12){
+            benpuan13.setBackground(Color.green);
+        }
+        if(skor[13] == -1){
+            benpuan14.setText("");
+            benpuan14.setBackground(Color.white);
+        }else if(index == 13){
+            benpuan14.setBackground(Color.green);
+        }
+        
+        
+        int ustPuan = 0;
+        for(int i=0;i<6;i++)
+            if(skor[i] != -1)
+                ustPuan+=skor[i];
+                
+        int altPuan = 0;
+        for(int i=7;i<14;i++)
+            if(skor[i] != -1)
+                altPuan+=skor[i];
+        
+        if(ustPuanSayac == 6){
+            if(ustPuan>=65){
+                ustPuan+=30;
+                ustPuanSayac = 7;
+            }
+        }
+        int genelPuan = ustPuan + altPuan;
+        benpuan7.setText(String.valueOf(ustPuan));
+        benpuan15.setText(String.valueOf(altPuan));
+        benpuan16.setText(String.valueOf(genelPuan));
+        
+        islemSirasi+=1;
     }
     
     public void Reset(){
@@ -515,6 +628,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan1.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan1.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan1.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan1MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, -1, -1));
 
         benpuan2.setBackground(new java.awt.Color(255, 255, 255));
@@ -523,6 +641,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan2.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan2.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan2.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan2MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan2, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 71, -1, -1));
 
         benpuan3.setBackground(new java.awt.Color(255, 255, 255));
@@ -531,6 +654,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan3.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan3.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan3.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan3MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan3, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 102, -1, -1));
 
         benpuan4.setBackground(new java.awt.Color(255, 255, 255));
@@ -539,6 +667,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan4.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan4.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan4.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan4.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan4MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan4, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 133, -1, -1));
 
         benpuan5.setBackground(new java.awt.Color(255, 255, 255));
@@ -547,6 +680,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan5.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan5.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan5.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan5.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan5MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan5, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 166, -1, -1));
 
         benpuan6.setBackground(new java.awt.Color(255, 255, 255));
@@ -555,6 +693,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan6.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan6.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan6.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan6.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan6MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan6, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 198, -1, -1));
 
         benpuan7.setBackground(new java.awt.Color(255, 255, 255));
@@ -571,6 +714,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan8.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan8.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan8.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan8.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan8MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan8, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 276, -1, -1));
 
         benpuan9.setBackground(new java.awt.Color(255, 255, 255));
@@ -579,6 +727,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan9.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan9.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan9.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan9.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan9MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan9, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 308, -1, -1));
 
         benpuan10.setBackground(new java.awt.Color(255, 255, 255));
@@ -587,6 +740,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan10.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan10.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan10.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan10.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan10MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan10, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 340, -1, -1));
 
         benpuan11.setBackground(new java.awt.Color(255, 255, 255));
@@ -595,6 +753,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan11.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan11.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan11.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan11.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan11MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan11, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 372, -1, -1));
 
         benpuan12.setBackground(new java.awt.Color(255, 255, 255));
@@ -603,6 +766,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan12.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan12.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan12.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan12.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan12MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan12, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 405, -1, -1));
 
         benpuan13.setBackground(new java.awt.Color(255, 255, 255));
@@ -611,6 +779,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan13.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan13.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan13.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan13.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan13MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan13, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 436, -1, -1));
 
         benpuan14.setBackground(new java.awt.Color(255, 255, 255));
@@ -619,6 +792,11 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan14.setMaximumSize(new java.awt.Dimension(30, 31));
         benpuan14.setMinimumSize(new java.awt.Dimension(30, 31));
         benpuan14.setPreferredSize(new java.awt.Dimension(30, 31));
+        benpuan14.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                benpuan14MouseClicked(evt);
+            }
+        });
         jPanel1.add(benpuan14, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 468, -1, -1));
 
         benpuan15.setBackground(new java.awt.Color(255, 255, 255));
@@ -819,6 +997,12 @@ public class Yahtzee extends javax.swing.JFrame {
         rakipSkor[6]=0;
         rakipSkor[14]=0;
         rakipSkor[15]=0;
+        benpuan7.setText("0");
+        benpuan15.setText("0");
+        benpuan16.setText("0");
+        benpuan7.setBackground(Color.green);
+        benpuan15.setBackground(Color.green);
+        benpuan16.setBackground(Color.green);
     }//GEN-LAST:event_formWindowOpened
 
     private void zarlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zarlaActionPerformed
@@ -930,6 +1114,84 @@ public class Yahtzee extends javax.swing.JFrame {
             kontrol_et();
         }
     }//GEN-LAST:event_masazar5MouseClicked
+
+    private void benpuan1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan1MouseClicked
+        if(skor[0]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan1.getText()),0);
+        }
+    }//GEN-LAST:event_benpuan1MouseClicked
+
+    private void benpuan2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan2MouseClicked
+        if(skor[1]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan2.getText()),1);
+        }
+    }//GEN-LAST:event_benpuan2MouseClicked
+
+    private void benpuan3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan3MouseClicked
+        if(skor[2]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan3.getText()),2);
+        }
+    }//GEN-LAST:event_benpuan3MouseClicked
+
+    private void benpuan4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan4MouseClicked
+        if(skor[3]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan4.getText()),3);
+        }
+    }//GEN-LAST:event_benpuan4MouseClicked
+
+    private void benpuan5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan5MouseClicked
+        if(skor[4]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan5.getText()),4);
+        }
+    }//GEN-LAST:event_benpuan5MouseClicked
+
+    private void benpuan6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan6MouseClicked
+        if(skor[5]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan6.getText()),5);
+        }
+    }//GEN-LAST:event_benpuan6MouseClicked
+
+    private void benpuan8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan8MouseClicked
+        if(skor[7]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan8.getText()),7);
+        }
+    }//GEN-LAST:event_benpuan8MouseClicked
+
+    private void benpuan9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan9MouseClicked
+        if(skor[8]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan9.getText()),8);
+        }
+    }//GEN-LAST:event_benpuan9MouseClicked
+
+    private void benpuan10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan10MouseClicked
+        if(skor[9]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan10.getText()),9);
+        }
+    }//GEN-LAST:event_benpuan10MouseClicked
+
+    private void benpuan11MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan11MouseClicked
+        if(skor[10]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan11.getText()),10);
+        }
+    }//GEN-LAST:event_benpuan11MouseClicked
+
+    private void benpuan12MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan12MouseClicked
+        if(skor[11]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan12.getText()),11);
+        }
+    }//GEN-LAST:event_benpuan12MouseClicked
+
+    private void benpuan13MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan13MouseClicked
+        if(skor[12]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan13.getText()),12);
+        }
+    }//GEN-LAST:event_benpuan13MouseClicked
+
+    private void benpuan14MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan14MouseClicked
+        if(skor[3]==-1 && islemSirasi == 5){
+            puani_ekle(Integer.parseInt(benpuan14.getText()),13);
+        }
+    }//GEN-LAST:event_benpuan14MouseClicked
 
     /**
      * @param args the command line arguments

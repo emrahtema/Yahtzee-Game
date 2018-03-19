@@ -15,11 +15,6 @@ import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 import yahtzee_client.Client;
 
-//oyunla ilgili durum mesajı gönderimi sonra eklencek.
-//Message msg = new Message(Message.Message_Type.Selected);
-//msg.content = myselection;
-//Client.Send(msg);
-
 public class Yahtzee extends javax.swing.JFrame {
     //framedeki komponentlere erişim için satatik oyun değişkeni
     public static Yahtzee ThisGame;
@@ -38,6 +33,7 @@ public class Yahtzee extends javax.swing.JFrame {
     private boolean sira=false;
     Operations op;
     private int ustPuanSayac = 0;
+    int bittiMi=0,rakipBittiMi=0;
     
     @Override
     public void paint(Graphics g) {
@@ -84,11 +80,26 @@ public class Yahtzee extends javax.swing.JFrame {
                             //her mesajın içeriğini bölelim.
                             //mesaj Start ile başlıyorsa oyuna kim başlayacak onu söyler.
                             if(str.equals("Start|1")){
-                                //biz başlıyoruz.
+                                //biz oynuyoruz
                                 sira = true;
-                            }else{
-                                //rakip başlıyor.
-                                sira = false;
+                                islemSirasi = 1;
+                            }else if(str.charAt(0) == 'P'){
+                                //rakip oynayıp bitirmiş, bize puan sonuçlarını göndermiş.
+                                int index = 0;
+                                String puan = "";
+                                for(int i=2;i<str.length();i++){
+                                    if(str.charAt(i)=='+'){
+                                        rakipSkor[index] = Integer.parseInt(puan);
+                                        index++;
+                                        puan = "";
+                                    }else{
+                                        puan = puan + str.charAt(i);
+                                    }
+                                }
+                                rakip_puanlarini_goster();
+                            }else if(str.charAt(0) == 'K'){
+                            //oyun bitmiş demekki.
+                            kim_kazandi();
                             }
                         }
                     }
@@ -120,6 +131,83 @@ public class Yahtzee extends javax.swing.JFrame {
         });
     }
 
+    public void rakip_puanlarini_goster(){
+        if(rakippuan1.getText().equals("") && rakipSkor[0]!=-1){
+            rakippuan1.setText(String.valueOf(rakipSkor[0]));
+            rakippuan1.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan2.getText().equals("") && rakipSkor[1]!=-1){
+            rakippuan2.setText(String.valueOf(rakipSkor[1]));
+            rakippuan2.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan3.getText().equals("") && rakipSkor[2]!=-1){
+            rakippuan3.setText(String.valueOf(rakipSkor[2]));
+            rakippuan3.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan4.getText().equals("") && rakipSkor[3]!=-1){
+            rakippuan4.setText(String.valueOf(rakipSkor[3]));
+            rakippuan4.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan5.getText().equals("") && rakipSkor[4]!=-1){
+            rakippuan5.setText(String.valueOf(rakipSkor[4]));
+            rakippuan5.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan6.getText().equals("") && rakipSkor[5]!=-1){
+            rakippuan6.setText(String.valueOf(rakipSkor[5]));
+            rakippuan6.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        
+            rakippuan7.setText(String.valueOf(rakipSkor[6]));
+            rakippuan7.setBackground(Color.BLACK);
+
+        if(rakippuan8.getText().equals("") && rakipSkor[7]!=-1){
+            rakippuan8.setText(String.valueOf(rakipSkor[7]));
+            rakippuan8.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan9.getText().equals("") && rakipSkor[8]!=-1){
+            rakippuan9.setText(String.valueOf(rakipSkor[8]));
+            rakippuan9.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan10.getText().equals("") && rakipSkor[9]!=-1){
+            rakippuan10.setText(String.valueOf(rakipSkor[9]));
+            rakippuan10.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan11.getText().equals("") && rakipSkor[10]!=-1){
+            rakippuan11.setText(String.valueOf(rakipSkor[10]));
+            rakippuan11.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan12.getText().equals("") && rakipSkor[11]!=-1){
+            rakippuan12.setText(String.valueOf(rakipSkor[11]));
+            rakippuan12.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan13.getText().equals("") && rakipSkor[12]!=-1){
+            rakippuan13.setText(String.valueOf(rakipSkor[12]));
+            rakippuan13.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        if(rakippuan14.getText().equals("") && rakipSkor[13]!=-1){
+            rakippuan14.setText(String.valueOf(rakipSkor[13]));
+            rakippuan14.setBackground(Color.BLACK);
+            rakipBittiMi++;
+        }
+        
+        rakippuan15.setText(String.valueOf(rakipSkor[14]));
+        rakippuan16.setText(String.valueOf(rakipSkor[15]));
+        rakippuan15.setBackground(Color.BLACK);
+        rakippuan16.setBackground(Color.BLACK);
+    }
+    
     //elimizdeki zarlara göre puanları hesaplayıp getiren metod.
     public void zarlara_gore_puanlari_getir(){
         op = new Operations();
@@ -127,26 +215,32 @@ public class Yahtzee extends javax.swing.JFrame {
         if(skor[0] == -1){
             benpuan1.setText(String.valueOf(puanlar[0]));
             benpuan1.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[1] == -1){
             benpuan2.setText(String.valueOf(puanlar[1]));
             benpuan2.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[2] == -1){
             benpuan3.setText(String.valueOf(puanlar[2]));
             benpuan3.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[3] == -1){
             benpuan4.setText(String.valueOf(puanlar[3]));
             benpuan4.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[4] == -1){
             benpuan5.setText(String.valueOf(puanlar[4]));
             benpuan5.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[5] == -1){
             benpuan6.setText(String.valueOf(puanlar[5]));
             benpuan6.setBackground(Color.yellow);
+            bittiMi++;
         }
         
         benpuan7.setText(String.valueOf(skor[6]));
@@ -154,29 +248,39 @@ public class Yahtzee extends javax.swing.JFrame {
         if(skor[7] == -1){
             benpuan8.setText(String.valueOf(puanlar[6]));
             benpuan8.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[8] == -1){
             benpuan9.setText(String.valueOf(puanlar[7]));
             benpuan9.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[9] == -1){
             benpuan10.setText(String.valueOf(puanlar[8]));
             benpuan10.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[10] == -1){
             benpuan11.setText(String.valueOf(puanlar[9]));
             benpuan11.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[11] == -1){
             benpuan12.setText(String.valueOf(puanlar[10]));
             benpuan12.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[12] == -1){
             benpuan13.setText(String.valueOf(puanlar[11]));
             benpuan13.setBackground(Color.yellow);
+            bittiMi++;
         }
         if(skor[13] == -1){
             benpuan14.setText(String.valueOf(puanlar[12]));
+            benpuan14.setBackground(Color.yellow);
+            bittiMi++;
+        }else if(skor[13] != -1 && puanlar[12] !=0){
+            benpuan14.setText("100");
             benpuan14.setBackground(Color.yellow);
         }
         
@@ -392,6 +496,28 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan16.setText(String.valueOf(genelPuan));
         
         islemSirasi+=1;
+        
+        sira = false; //bizim el bitti, sıra rakibe geçecek.
+        String rakibeMesaj = "Start|1~P|";
+        for(int i:skor)
+            rakibeMesaj = rakibeMesaj + String.valueOf(i)+"+";
+        
+        if(bittiMi == 13 && rakipBittiMi == 13)
+            rakibeMesaj = rakibeMesaj + "K|ok";
+        
+        //mesajı rakibe gönderelim.
+        Message msg = new Message(Message.Message_Type.Selected);
+        msg.content = rakibeMesaj;
+        Client.Send(msg);
+    }
+    
+    public void kim_kazandi(){
+        String kazanan = "";
+        if(Integer.parseInt(benpuan16.getText())>Integer.parseInt(rakippuan16.getText()))
+            kazanan = "SEN";
+        else
+            kazanan = "RAKİP";
+        durum.setText("Puanın: "+benpuan16.getText()+" Rakip: "+rakippuan16.getText()+" Kazanan: "+kazanan);
     }
     
     public void Reset(){
@@ -973,6 +1099,7 @@ public class Yahtzee extends javax.swing.JFrame {
         Message msg = new Message(Message.Message_Type.Startt);
         msg.content = "";
         Client.Send(msg);
+        
     }//GEN-LAST:event_baglanbuttonActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -1006,6 +1133,7 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowOpened
 
     private void zarlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zarlaActionPerformed
+        op = new Operations();
         if(islemSirasi==2){
             islemSirasi++;
             elindeki_zarlari_at();
@@ -1017,51 +1145,61 @@ public class Yahtzee extends javax.swing.JFrame {
             zarlari_at();
             zarla.setEnabled(false);
         }
+        masazar1.setLocation(op.addToX(), op.addToY());
+        masazar2.setLocation(100+op.addToX(), op.addToY());
+        masazar3.setLocation(200+op.addToX(), op.addToY());
+        masazar4.setLocation(300+op.addToX(), op.addToY());
+        masazar5.setLocation(400+op.addToX(), op.addToY());
         //sırada puan seçimi var.
     }//GEN-LAST:event_zarlaActionPerformed
 
     private void benzar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar1MouseClicked
-        if(ortadakiZarlarinDegerleri[0]==0 && islemSirasi!=1){
+        if(ortadakiZarlarinDegerleri[0]==0 && islemSirasi>1 && islemSirasi<6){
             masazar1.setIcon(zar_resimleri[zarlarinDegerleri[0]]);
             ortadakiZarlarinDegerleri[0]=zarlarinDegerleri[0];
             zarlarinDegerleri[0]=0;
             benzar1.setIcon(zar_resimleri[0]);
+            masazar1.setLocation(op.addToX(), op.addToY());
         }
     }//GEN-LAST:event_benzar1MouseClicked
 
     private void benzar2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar2MouseClicked
-        if(ortadakiZarlarinDegerleri[1]==0 && islemSirasi!=1){
+        if(ortadakiZarlarinDegerleri[1]==0 && islemSirasi>1 && islemSirasi<6){
             masazar2.setIcon(zar_resimleri[zarlarinDegerleri[1]]);
             ortadakiZarlarinDegerleri[1]=zarlarinDegerleri[1];
             zarlarinDegerleri[1]=0;
             benzar2.setIcon(zar_resimleri[0]);
+            masazar2.setLocation(100+op.addToX(), op.addToY());
         }
     }//GEN-LAST:event_benzar2MouseClicked
 
     private void benzar3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar3MouseClicked
-        if(ortadakiZarlarinDegerleri[2]==0 && islemSirasi!=1){
+        if(ortadakiZarlarinDegerleri[2]==0 && islemSirasi>1 && islemSirasi<6){
             masazar3.setIcon(zar_resimleri[zarlarinDegerleri[2]]);
             ortadakiZarlarinDegerleri[2]=zarlarinDegerleri[2];
             zarlarinDegerleri[2]=0;
             benzar3.setIcon(zar_resimleri[0]);
+            masazar3.setLocation(200+op.addToX(), op.addToY());
         }
     }//GEN-LAST:event_benzar3MouseClicked
 
     private void benzar4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar4MouseClicked
-        if(ortadakiZarlarinDegerleri[3]==0 && islemSirasi!=1){
+        if(ortadakiZarlarinDegerleri[3]==0 && islemSirasi>1 && islemSirasi<6){
             masazar4.setIcon(zar_resimleri[zarlarinDegerleri[3]]);
             ortadakiZarlarinDegerleri[3]=zarlarinDegerleri[3];
             zarlarinDegerleri[3]=0;
             benzar4.setIcon(zar_resimleri[0]);
+            masazar4.setLocation(300+op.addToX(), op.addToY());
         }
     }//GEN-LAST:event_benzar4MouseClicked
 
     private void benzar5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar5MouseClicked
-        if(ortadakiZarlarinDegerleri[4]==0 && islemSirasi!=1){
+        if(ortadakiZarlarinDegerleri[4]==0 && islemSirasi>1 && islemSirasi<6){
             masazar5.setIcon(zar_resimleri[zarlarinDegerleri[4]]);
             ortadakiZarlarinDegerleri[4]=zarlarinDegerleri[4];
             zarlarinDegerleri[4]=0;
             benzar5.setIcon(zar_resimleri[0]);
+            masazar5.setLocation(400+op.addToX(), op.addToY());
         }
     }//GEN-LAST:event_benzar5MouseClicked
 
@@ -1188,7 +1326,7 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_benpuan13MouseClicked
 
     private void benpuan14MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan14MouseClicked
-        if(skor[3]==-1 && islemSirasi == 5){
+        if(skor[13]==-1 && islemSirasi == 5){
             puani_ekle(Integer.parseInt(benpuan14.getText()),13);
         }
     }//GEN-LAST:event_benpuan14MouseClicked

@@ -75,6 +75,7 @@ public class Yahtzee extends javax.swing.JFrame {
                     //eğer islem stringine bir mesaj gelmişse yani boş değilse
                     //aşağıdaki işlemleri yapsın.
                     if(!islem.equals("")){
+                        oyunOynaniyor = true;
                         //birden çok mesaj varsa bölelim.
                         String[] msg = islem.split("~");
                         islem="";
@@ -84,8 +85,8 @@ public class Yahtzee extends javax.swing.JFrame {
                             if(str.equals("Start|1")){
                                 //biz oynuyoruz
                                 sira = true;
-                                oyunOynaniyor = true;
                                 islemSirasi = 1;
+                                butun_zarlari_sifirla();
                             }else if(str.charAt(0) == 'P'){
                                 //rakip oynayıp bitirmiş, bize puan sonuçlarını göndermiş.
                                 int index = 0;
@@ -104,9 +105,8 @@ public class Yahtzee extends javax.swing.JFrame {
                             //oyun bitmiş demekki.
                             oyunOynaniyor = false;
                             kim_kazandi();
-                            }else if(str.charAt(0) == 'O'){
-                                rakibin_oynadigini_goster(str);
-                                System.out.println("ookk");
+                            }else if(str.charAt(0) == 'Z'){
+                                rakibin_oynayisi_goster(str);
                             }
                         }
                     }
@@ -420,19 +420,26 @@ public class Yahtzee extends javax.swing.JFrame {
         
         for(int i=0;i<5;i++)
             ortadakiZarlarinDegerleri[i]=0;
-        masazar1.setIcon(zar_resimleri[0]);
-        masazar1.setIcon(zar_resimleri[0]);
-        masazar1.setIcon(zar_resimleri[0]);
-        masazar1.setIcon(zar_resimleri[0]);
-        masazar1.setIcon(zar_resimleri[0]);
     }
     
-    public void rakip_zar_resimlerini_sifirla(){
+    public void butun_zarlari_sifirla(){
         rakipzar1.setIcon(zar_resimleri[0]);
         rakipzar2.setIcon(zar_resimleri[0]);
         rakipzar3.setIcon(zar_resimleri[0]);
         rakipzar4.setIcon(zar_resimleri[0]);
         rakipzar5.setIcon(zar_resimleri[0]);
+        
+        masazar1.setIcon(zar_resimleri[0]);
+        masazar2.setIcon(zar_resimleri[0]);
+        masazar3.setIcon(zar_resimleri[0]);
+        masazar4.setIcon(zar_resimleri[0]);
+        masazar5.setIcon(zar_resimleri[0]);
+        
+        benzar1.setIcon(zar_resimleri[0]);
+        benzar1.setIcon(zar_resimleri[0]);
+        benzar1.setIcon(zar_resimleri[0]);
+        benzar1.setIcon(zar_resimleri[0]);
+        benzar1.setIcon(zar_resimleri[0]);
     }
     
     public void puani_ekle(int puan,int index){
@@ -567,10 +574,8 @@ public class Yahtzee extends javax.swing.JFrame {
         sira = false; //bizim el bitti, sıra rakibe geçicek.
         String rakibeMesaj = "";
         
-        if(bittiMi == 1 && rakipBittiMi == 1){//13 olmalı bu erken bitsin diye.
-            rakibeMesaj = "P|";
-            for(int i:skor)
-                rakibeMesaj = "K|ok~";
+        if(bittiMi == 2 && rakipBittiMi == 2){//13 olmalı bu erken bitsin diye.
+            rakibeMesaj = "K|ok~";
             oyunOynaniyor = false;
         }else{
             rakibeMesaj = "Start|1~P|";
@@ -590,14 +595,18 @@ public class Yahtzee extends javax.swing.JFrame {
         Client.Send(msg);
         if(!oyunOynaniyor)
             kim_kazandi();
+        
+        butun_zarlari_sifirla();
     }
     
     public void kim_kazandi(){
         String kazanan = "";
         if(Integer.parseInt(benpuan16.getText())>Integer.parseInt(rakippuan16.getText()))
             kazanan = "SEN";
-        else
+        else if(Integer.parseInt(benpuan16.getText())<Integer.parseInt(rakippuan16.getText()))
             kazanan = "RAKİP";
+        else
+            kazanan = "BERABERE";
         JOptionPane.showMessageDialog(null,("Puanın: "+benpuan16.getText()+" Rakip: "+rakippuan16.getText()+" \nKazanan: "+kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
     }
     
@@ -611,54 +620,42 @@ public class Yahtzee extends javax.swing.JFrame {
     //oyun bitiminde hangi şeyler enable false olacaksa onlar oluyor.
     }
     
-    public void rakibe_oynadigini_gonder(boolean ortadanOynadi, int zarNo, int zarDegeri){
+    public void rakibe_oynadigini_gonder(){
         Message msg = new Message(Message.Message_Type.Selected);
-        msg.content = "O|11"+zarDegeri+"~";
+        msg.content = "Z|"+
+                ortadakiZarlarinDegerleri[0]+
+                ortadakiZarlarinDegerleri[1]+
+                ortadakiZarlarinDegerleri[2]+
+                ortadakiZarlarinDegerleri[3]+
+                ortadakiZarlarinDegerleri[4]+
+                zarlarinDegerleri[0]+
+                zarlarinDegerleri[1]+
+                zarlarinDegerleri[2]+
+                zarlarinDegerleri[3]+
+                zarlarinDegerleri[4];
         Client.Send(msg);
     }
-    public void rakibin_oynadigini_goster(String oynadi){
-        int yer = Integer.parseInt(oynadi.charAt(2)+"");
-        int zarNo = Integer.parseInt(oynadi.charAt(3)+"");
-        int zarDegeri = Integer.parseInt(oynadi.charAt(4)+"");
+    
+    public void rakibin_oynayisi_goster(String zarlar){
+        masazar1.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(6)+"")]);
+        masazar2.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(5)+"")]);
+        masazar3.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(4)+"")]);
+        masazar4.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(3)+"")]);
+        masazar5.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(2)+"")]);
         
-        if(yer == 1){
-            if(zarNo ==1){
-                masazar1.setIcon(zar_resimleri[0]);
-                rakipzar1.setIcon(zar_resimleri[zarDegeri]);
-            }else if(zarNo ==2){
-                masazar2.setIcon(zar_resimleri[0]);
-                rakipzar2.setIcon(zar_resimleri[zarDegeri]);
-            }
-            else if(zarNo ==3){
-                masazar3.setIcon(zar_resimleri[0]);
-                rakipzar3.setIcon(zar_resimleri[zarDegeri]);
-            }else if(zarNo ==4){
-                masazar4.setIcon(zar_resimleri[0]);
-                rakipzar4.setIcon(zar_resimleri[zarDegeri]);
-            }else if(zarNo ==5){
-                masazar5.setIcon(zar_resimleri[0]);
-                rakipzar5.setIcon(zar_resimleri[zarDegeri]);
-            }
-        }else if(yer == 0){
-            if(zarNo ==1){
-                masazar1.setIcon(zar_resimleri[zarDegeri]);
-                rakipzar1.setIcon(zar_resimleri[0]);
-            }else if(zarNo ==2){
-                masazar2.setIcon(zar_resimleri[zarDegeri]);
-                rakipzar2.setIcon(zar_resimleri[0]);
-            }
-            else if(zarNo ==3){
-                masazar3.setIcon(zar_resimleri[zarDegeri]);
-                rakipzar3.setIcon(zar_resimleri[0]);
-            }else if(zarNo ==4){
-                masazar4.setIcon(zar_resimleri[zarDegeri]);
-                rakipzar4.setIcon(zar_resimleri[0]);
-            }else if(zarNo ==5){
-                masazar5.setIcon(zar_resimleri[zarDegeri]);
-                rakipzar5.setIcon(zar_resimleri[0]);
-            }
-        }
+        rakipzar1.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(11)+"")]);
+        rakipzar2.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(10)+"")]);
+        rakipzar3.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(9)+"")]);
+        rakipzar4.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(8)+"")]);
+        rakipzar5.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(7)+"")]);
+        
+        masazar1.setLocation(op.addToX(), op.addToY());
+        masazar2.setLocation(100+op.addToX(), op.addToY());
+        masazar3.setLocation(200+op.addToX(), op.addToY());
+        masazar4.setLocation(300+op.addToX(), op.addToY());
+        masazar5.setLocation(400+op.addToX(), op.addToY());
     }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1298,7 +1295,9 @@ public class Yahtzee extends javax.swing.JFrame {
         masazar3.setLocation(200+op.addToX(), op.addToY());
         masazar4.setLocation(300+op.addToX(), op.addToY());
         masazar5.setLocation(400+op.addToX(), op.addToY());
-        //sırada puan seçimi var.
+        
+        //butona tıklayıp masaya zarları attık, bunu rakibe gönderelim ki masayı görsün.
+        rakibe_oynadigini_gonder();
     }//GEN-LAST:event_zarlaActionPerformed
 
     private void benzar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar1MouseClicked
@@ -1309,6 +1308,7 @@ public class Yahtzee extends javax.swing.JFrame {
             benzar1.setIcon(zar_resimleri[0]);
             masazar1.setLocation(op.addToX(), op.addToY());
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar1MouseClicked
 
@@ -1320,6 +1320,7 @@ public class Yahtzee extends javax.swing.JFrame {
             benzar2.setIcon(zar_resimleri[0]);
             masazar2.setLocation(100+op.addToX(), op.addToY());
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar2MouseClicked
 
@@ -1331,6 +1332,7 @@ public class Yahtzee extends javax.swing.JFrame {
             benzar3.setIcon(zar_resimleri[0]);
             masazar3.setLocation(200+op.addToX(), op.addToY());
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar3MouseClicked
 
@@ -1342,6 +1344,7 @@ public class Yahtzee extends javax.swing.JFrame {
             benzar4.setIcon(zar_resimleri[0]);
             masazar4.setLocation(300+op.addToX(), op.addToY());
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar4MouseClicked
 
@@ -1353,6 +1356,7 @@ public class Yahtzee extends javax.swing.JFrame {
             benzar5.setIcon(zar_resimleri[0]);
             masazar5.setLocation(400+op.addToX(), op.addToY());
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar5MouseClicked
 
@@ -1363,7 +1367,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[0]=0;
             masazar1.setIcon(zar_resimleri[0]);
             kontrol_et();
-            rakibe_oynadigini_gonder(true,1,ortadakiZarlarinDegerleri[0]);
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_masazar1MouseClicked
 
@@ -1374,6 +1378,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[1]=0;
             masazar2.setIcon(zar_resimleri[0]);
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_masazar2MouseClicked
 
@@ -1384,6 +1389,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[2]=0;
             masazar3.setIcon(zar_resimleri[0]);
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_masazar3MouseClicked
 
@@ -1394,6 +1400,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[3]=0;
             masazar4.setIcon(zar_resimleri[0]);
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_masazar4MouseClicked
 
@@ -1404,6 +1411,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[4]=0;
             masazar5.setIcon(zar_resimleri[0]);
             kontrol_et();
+            rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_masazar5MouseClicked
 

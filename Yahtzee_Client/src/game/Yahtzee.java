@@ -35,6 +35,7 @@ public class Yahtzee extends javax.swing.JFrame {
     Operations op;
     private int ustPuanSayac = 0;
     private int bittiMi=0,rakipBittiMi=0;
+    private boolean oyunOynaniyor = false;
     
     @Override
     public void paint(Graphics g) {
@@ -83,6 +84,7 @@ public class Yahtzee extends javax.swing.JFrame {
                             if(str.equals("Start|1")){
                                 //biz oynuyoruz
                                 sira = true;
+                                oyunOynaniyor = true;
                                 islemSirasi = 1;
                             }else if(str.charAt(0) == 'P'){
                                 //rakip oynayıp bitirmiş, bize puan sonuçlarını göndermiş.
@@ -100,11 +102,15 @@ public class Yahtzee extends javax.swing.JFrame {
                                 rakip_puanlarini_goster();
                             }else if(str.charAt(0) == 'K'){
                             //oyun bitmiş demekki.
+                            oyunOynaniyor = false;
                             kim_kazandi();
+                            }else if(str.charAt(0) == 'O'){
+                                rakibin_oynadigini_goster(str);
+                                System.out.println("ookk");
                             }
                         }
                     }
-                    if(sira){
+                    if(sira && oyunOynaniyor){
                         durum.setText("Durum: Oynama Sırası Sende.");
                         //sira trueyse sıra bizdedir.ona göre işlemler yap
                         bizimPanel.setEnabled(true);
@@ -114,7 +120,7 @@ public class Yahtzee extends javax.swing.JFrame {
                             zarla.setEnabled(true);
                             islemSirasi++;
                         }
-                    }else{
+                    }else if(!sira && oyunOynaniyor){
                         durum.setText("Durum: Oynama Sırası Rakipte.");
                         //sira rakiptedir ona göre işlemler yap.
                         rakipPanel.setEnabled(true);
@@ -559,12 +565,18 @@ public class Yahtzee extends javax.swing.JFrame {
         islemSirasi+=1;
         
         sira = false; //bizim el bitti, sıra rakibe geçicek.
-        String rakibeMesaj = "Start|1~P|";
-        for(int i:skor)
-            rakibeMesaj = rakibeMesaj + String.valueOf(i)+"+";
+        String rakibeMesaj = "";
         
-        if(bittiMi == 13 && rakipBittiMi == 13)
-            rakibeMesaj = "K|ok~";
+        if(bittiMi == 1 && rakipBittiMi == 1){//13 olmalı bu erken bitsin diye.
+            rakibeMesaj = "P|";
+            for(int i:skor)
+                rakibeMesaj = "K|ok~";
+            oyunOynaniyor = false;
+        }else{
+            rakibeMesaj = "Start|1~P|";
+            for(int i:skor)
+                rakibeMesaj = rakibeMesaj + String.valueOf(i)+"+";
+        }
         
         benzar1.setIcon(zar_resimleri[0]);
         benzar2.setIcon(zar_resimleri[0]);
@@ -576,6 +588,8 @@ public class Yahtzee extends javax.swing.JFrame {
         Message msg = new Message(Message.Message_Type.Selected);
         msg.content = rakibeMesaj;
         Client.Send(msg);
+        if(!oyunOynaniyor)
+            kim_kazandi();
     }
     
     public void kim_kazandi(){
@@ -584,7 +598,7 @@ public class Yahtzee extends javax.swing.JFrame {
             kazanan = "SEN";
         else
             kazanan = "RAKİP";
-        JOptionPane.showMessageDialog(null,("Puanın: "+benpuan16.getText()+" Rakip: "+rakippuan16.getText()+" Kazanan: "+kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null,("Puanın: "+benpuan16.getText()+" Rakip: "+rakippuan16.getText()+" \nKazanan: "+kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
     }
     
     public void Reset(){
@@ -595,6 +609,55 @@ public class Yahtzee extends javax.swing.JFrame {
             }
         }
     //oyun bitiminde hangi şeyler enable false olacaksa onlar oluyor.
+    }
+    
+    public void rakibe_oynadigini_gonder(boolean ortadanOynadi, int zarNo, int zarDegeri){
+        Message msg = new Message(Message.Message_Type.Selected);
+        msg.content = "O|11"+zarDegeri+"~";
+        Client.Send(msg);
+    }
+    public void rakibin_oynadigini_goster(String oynadi){
+        int yer = Integer.parseInt(oynadi.charAt(2)+"");
+        int zarNo = Integer.parseInt(oynadi.charAt(3)+"");
+        int zarDegeri = Integer.parseInt(oynadi.charAt(4)+"");
+        
+        if(yer == 1){
+            if(zarNo ==1){
+                masazar1.setIcon(zar_resimleri[0]);
+                rakipzar1.setIcon(zar_resimleri[zarDegeri]);
+            }else if(zarNo ==2){
+                masazar2.setIcon(zar_resimleri[0]);
+                rakipzar2.setIcon(zar_resimleri[zarDegeri]);
+            }
+            else if(zarNo ==3){
+                masazar3.setIcon(zar_resimleri[0]);
+                rakipzar3.setIcon(zar_resimleri[zarDegeri]);
+            }else if(zarNo ==4){
+                masazar4.setIcon(zar_resimleri[0]);
+                rakipzar4.setIcon(zar_resimleri[zarDegeri]);
+            }else if(zarNo ==5){
+                masazar5.setIcon(zar_resimleri[0]);
+                rakipzar5.setIcon(zar_resimleri[zarDegeri]);
+            }
+        }else if(yer == 0){
+            if(zarNo ==1){
+                masazar1.setIcon(zar_resimleri[zarDegeri]);
+                rakipzar1.setIcon(zar_resimleri[0]);
+            }else if(zarNo ==2){
+                masazar2.setIcon(zar_resimleri[zarDegeri]);
+                rakipzar2.setIcon(zar_resimleri[0]);
+            }
+            else if(zarNo ==3){
+                masazar3.setIcon(zar_resimleri[zarDegeri]);
+                rakipzar3.setIcon(zar_resimleri[0]);
+            }else if(zarNo ==4){
+                masazar4.setIcon(zar_resimleri[zarDegeri]);
+                rakipzar4.setIcon(zar_resimleri[0]);
+            }else if(zarNo ==5){
+                masazar5.setIcon(zar_resimleri[zarDegeri]);
+                rakipzar5.setIcon(zar_resimleri[0]);
+            }
+        }
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -1300,6 +1363,7 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[0]=0;
             masazar1.setIcon(zar_resimleri[0]);
             kontrol_et();
+            rakibe_oynadigini_gonder(true,1,ortadakiZarlarinDegerleri[0]);
         }
     }//GEN-LAST:event_masazar1MouseClicked
 

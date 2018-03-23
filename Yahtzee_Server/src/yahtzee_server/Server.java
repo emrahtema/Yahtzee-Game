@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package yahtzee_server;
 
 import game.Message;
@@ -15,10 +10,6 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author INSECT
- */
 //client gelişini dinleme threadi
 class ServerThread extends Thread {
 
@@ -41,7 +32,6 @@ class ServerThread extends Thread {
                 Server.Clients.add(nclient);
                 //client mesaj dinlemesini başlat
                 nclient.listenThread.start();
-
             } catch (IOException ex) {
                 Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
             }

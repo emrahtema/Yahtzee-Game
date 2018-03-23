@@ -1,50 +1,29 @@
 package game;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import yahtzee_client.Client;
 
 public class Yahtzee extends javax.swing.JFrame {
+
     //framedeki komponentlere erişim için satatik oyun değişkeni
     public static Yahtzee ThisGame;
     //ekrandaki resim değişimi için timer yerine thread
     public Thread tmr_slider;
     ImageIcon zar_resimleri[];
-    ImageIcon table;
-    Random rand;
-    private BufferedImage tablo;
     private int[] skor = new int[16];
     private int[] rakipSkor = new int[16];
     private int[] zarlarinDegerleri = new int[5];
     private int[] ortadakiZarlarinDegerleri = new int[5];
-    public String islem="";
-    public int islemSirasi=1;
-    private boolean sira=false;
+    public String islem = "";
+    public int islemSirasi = 0;
     Operations op;
     private int ustPuanSayac = 0;
-    private int bittiMi=0,rakipBittiMi=0;
-    private boolean oyunOynaniyor = false;
-    
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-        g.drawImage(tablo, 0, 0, null);
-    }
-    /**
-     * Creates new form Yahtzee
-     */
+    private int bittiMi = 0, rakipBittiMi = 0;
+
     public Yahtzee() {
         initComponents();
         op = new Operations();
@@ -59,9 +38,8 @@ public class Yahtzee extends javax.swing.JFrame {
             zar_resimleri[5] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/5.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zar_resimleri[6] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/6.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zarla.setIcon(new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/dice.png"))).getImage().getScaledInstance(150, 50, Image.SCALE_DEFAULT)));
-            
-            table = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/table.png"))).getImage().getScaledInstance(302, 573, Image.SCALE_DEFAULT));
-            jLabel1.setIcon(table);
+
+            jLabel1.setIcon(new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/table.png"))).getImage().getScaledInstance(302, 573, Image.SCALE_DEFAULT)));
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -74,57 +52,43 @@ public class Yahtzee extends javax.swing.JFrame {
                     Thread.sleep(100);
                     //eğer islem stringine bir mesaj gelmişse yani boş değilse
                     //aşağıdaki işlemleri yapsın.
-                    if(!islem.equals("")){
-                        oyunOynaniyor = true;
+                    if (!islem.equals("")) {
                         //birden çok mesaj varsa bölelim.
                         String[] msg = islem.split("~");
-                        islem="";
-                        for(String str : msg){
+                        islem = "";
+                        for (String str : msg) {
                             //her mesajın içeriğini bölelim.
                             //mesaj Start ile başlıyorsa oyuna kim başlayacak onu söyler.
-                            if(str.equals("Start|1")){
+                            if (str.equals("Start|1")) {
                                 //biz oynuyoruz
-                                sira = true;
                                 islemSirasi = 1;
                                 butun_zarlari_sifirla();
-                            }else if(str.charAt(0) == 'P'){
+                            } else if (str.charAt(0) == 'P') {
                                 //rakip oynayıp bitirmiş, bize puan sonuçlarını göndermiş.
                                 int index = 0;
                                 String puan = "";
-                                for(int i=2;i<str.length();i++){
-                                    if(str.charAt(i)=='+'){
+                                for (int i = 2; i < str.length(); i++) {
+                                    if (str.charAt(i) == '+') {
                                         rakipSkor[index] = Integer.parseInt(puan);
                                         index++;
                                         puan = "";
-                                    }else{
+                                    } else {
                                         puan = puan + str.charAt(i);
                                     }
                                 }
                                 rakip_puanlarini_goster();
-                            }else if(str.charAt(0) == 'K'){
-                            //oyun bitmiş demekki.
-                            oyunOynaniyor = false;
-                            kim_kazandi();
-                            }else if(str.charAt(0) == 'Z'){
+                            } else if (str.charAt(0) == 'Z') {
                                 rakibin_oynayisi_goster(str);
                             }
                         }
                     }
-                    if(sira && oyunOynaniyor){
+                    if (islemSirasi == 1) {
                         durum.setText("Durum: Oynama Sırası Sende.");
-                        //sira trueyse sıra bizdedir.ona göre işlemler yap
-                        bizimPanel.setEnabled(true);
-                        rakipPanel.setEnabled(false);
-                        if(islemSirasi==1){//ilk islem masadaki zarları kendimize almak.
-                            ilk_sira_zarlari_at();
-                            zarla.setEnabled(true);
-                            islemSirasi++;
-                        }
-                    }else if(!sira && oyunOynaniyor){
+                        ilk_sira_zarlari_at();
+                        zarla.setEnabled(true);
+                        islemSirasi = 2;
+                    } else if (islemSirasi == 0) {
                         durum.setText("Durum: Oynama Sırası Rakipte.");
-                        //sira rakiptedir ona göre işlemler yap.
-                        rakipPanel.setEnabled(true);
-                        bizimPanel.setEnabled(false);
                     }
                     //oyun bitimi takibi buradan yapılabilir.
                     //tmr_slider.stop();
@@ -138,426 +102,432 @@ public class Yahtzee extends javax.swing.JFrame {
         });
     }
 
-    public void rakip_puanlarini_goster(){
-        if(rakippuan1.getText().equals("") && rakipSkor[0]!=-1){
+    public void rakip_puanlarini_goster() {
+        if (rakippuan1.getText().equals("") && rakipSkor[0] != -1) {
             rakippuan1.setText(String.valueOf(rakipSkor[0]));
             rakippuan1.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan2.getText().equals("") && rakipSkor[1]!=-1){
+        if (rakippuan2.getText().equals("") && rakipSkor[1] != -1) {
             rakippuan2.setText(String.valueOf(rakipSkor[1]));
             rakippuan2.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan3.getText().equals("") && rakipSkor[2]!=-1){
+        if (rakippuan3.getText().equals("") && rakipSkor[2] != -1) {
             rakippuan3.setText(String.valueOf(rakipSkor[2]));
             rakippuan3.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan4.getText().equals("") && rakipSkor[3]!=-1){
+        if (rakippuan4.getText().equals("") && rakipSkor[3] != -1) {
             rakippuan4.setText(String.valueOf(rakipSkor[3]));
             rakippuan4.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan5.getText().equals("") && rakipSkor[4]!=-1){
+        if (rakippuan5.getText().equals("") && rakipSkor[4] != -1) {
             rakippuan5.setText(String.valueOf(rakipSkor[4]));
             rakippuan5.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan6.getText().equals("") && rakipSkor[5]!=-1){
+        if (rakippuan6.getText().equals("") && rakipSkor[5] != -1) {
             rakippuan6.setText(String.valueOf(rakipSkor[5]));
             rakippuan6.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        
-            rakippuan7.setText(String.valueOf(rakipSkor[6]));
-            rakippuan7.setBackground(Color.BLACK);
 
-        if(rakippuan8.getText().equals("") && rakipSkor[7]!=-1){
+        rakippuan7.setText(String.valueOf(rakipSkor[6]));
+        rakippuan7.setBackground(Color.BLACK);
+
+        if (rakippuan8.getText().equals("") && rakipSkor[7] != -1) {
             rakippuan8.setText(String.valueOf(rakipSkor[7]));
             rakippuan8.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan9.getText().equals("") && rakipSkor[8]!=-1){
+        if (rakippuan9.getText().equals("") && rakipSkor[8] != -1) {
             rakippuan9.setText(String.valueOf(rakipSkor[8]));
             rakippuan9.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan10.getText().equals("") && rakipSkor[9]!=-1){
+        if (rakippuan10.getText().equals("") && rakipSkor[9] != -1) {
             rakippuan10.setText(String.valueOf(rakipSkor[9]));
             rakippuan10.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan11.getText().equals("") && rakipSkor[10]!=-1){
+        if (rakippuan11.getText().equals("") && rakipSkor[10] != -1) {
             rakippuan11.setText(String.valueOf(rakipSkor[10]));
             rakippuan11.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan12.getText().equals("") && rakipSkor[11]!=-1){
+        if (rakippuan12.getText().equals("") && rakipSkor[11] != -1) {
             rakippuan12.setText(String.valueOf(rakipSkor[11]));
             rakippuan12.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan13.getText().equals("") && rakipSkor[12]!=-1){
+        if (rakippuan13.getText().equals("") && rakipSkor[12] != -1) {
             rakippuan13.setText(String.valueOf(rakipSkor[12]));
             rakippuan13.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        if(rakippuan14.getText().equals("") && rakipSkor[13]!=-1){
+        if (rakippuan14.getText().equals("") && rakipSkor[13] != -1) {
             rakippuan14.setText(String.valueOf(rakipSkor[13]));
             rakippuan14.setBackground(Color.BLACK);
             rakipBittiMi++;
         }
-        
+
         rakippuan15.setText(String.valueOf(rakipSkor[14]));
         rakippuan16.setText(String.valueOf(rakipSkor[15]));
         rakippuan15.setBackground(Color.BLACK);
         rakippuan16.setBackground(Color.BLACK);
+
+        bitis_kontrol();
     }
-    
+
     //elimizdeki zarlara göre puanları hesaplayıp getiren metod.
-    public void zarlara_gore_puanlari_getir(){
+    public void zarlara_gore_puanlari_getir() {
         op = new Operations();
         int[] puanlar = op.puanlariGetir(zarlarinDegerleri);
-        if(skor[0] == -1){
+        if (skor[0] == -1) {
             benpuan1.setText(String.valueOf(puanlar[0]));
             benpuan1.setBackground(Color.yellow);
         }
-        if(skor[1] == -1){
+        if (skor[1] == -1) {
             benpuan2.setText(String.valueOf(puanlar[1]));
             benpuan2.setBackground(Color.yellow);
         }
-        if(skor[2] == -1){
+        if (skor[2] == -1) {
             benpuan3.setText(String.valueOf(puanlar[2]));
             benpuan3.setBackground(Color.yellow);
         }
-        if(skor[3] == -1){
+        if (skor[3] == -1) {
             benpuan4.setText(String.valueOf(puanlar[3]));
             benpuan4.setBackground(Color.yellow);
         }
-        if(skor[4] == -1){
+        if (skor[4] == -1) {
             benpuan5.setText(String.valueOf(puanlar[4]));
             benpuan5.setBackground(Color.yellow);
         }
-        if(skor[5] == -1){
+        if (skor[5] == -1) {
             benpuan6.setText(String.valueOf(puanlar[5]));
             benpuan6.setBackground(Color.yellow);
         }
-        
+
         benpuan7.setText(String.valueOf(skor[6]));
-        
-        if(skor[7] == -1){
+
+        if (skor[7] == -1) {
             benpuan8.setText(String.valueOf(puanlar[6]));
             benpuan8.setBackground(Color.yellow);
         }
-        if(skor[8] == -1){
+        if (skor[8] == -1) {
             benpuan9.setText(String.valueOf(puanlar[7]));
             benpuan9.setBackground(Color.yellow);
         }
-        if(skor[9] == -1){
+        if (skor[9] == -1) {
             benpuan10.setText(String.valueOf(puanlar[8]));
             benpuan10.setBackground(Color.yellow);
         }
-        if(skor[10] == -1){
+        if (skor[10] == -1) {
             benpuan11.setText(String.valueOf(puanlar[9]));
             benpuan11.setBackground(Color.yellow);
         }
-        if(skor[11] == -1){
+        if (skor[11] == -1) {
             benpuan12.setText(String.valueOf(puanlar[10]));
             benpuan12.setBackground(Color.yellow);
         }
-        if(skor[12] == -1){
+        if (skor[12] == -1) {
             benpuan13.setText(String.valueOf(puanlar[11]));
             benpuan13.setBackground(Color.yellow);
         }
-        if(skor[13] == -1){
+        if (skor[13] == -1) {
             benpuan14.setText(String.valueOf(puanlar[12]));
             benpuan14.setBackground(Color.yellow);
-        }else if(skor[13] != -1 && puanlar[12] !=0){
+        } else if (skor[13] != -1 && puanlar[12] != 0) {
             benpuan14.setText("100");
             benpuan14.setBackground(Color.yellow);
         }
-        
+
         benpuan15.setText(String.valueOf(skor[14]));
         benpuan16.setText(String.valueOf(skor[15]));
-        
+
     }
-    
-    public void puansiz_labelleri_sifirla(){
-        if(skor[0] == -1){
+
+    public void puansiz_labelleri_sifirla() {
+        if (skor[0] == -1) {
             benpuan1.setText("");
             benpuan1.setBackground(Color.white);
         }
-        if(skor[1] == -1){
+        if (skor[1] == -1) {
             benpuan2.setText("");
             benpuan2.setBackground(Color.white);
         }
-        if(skor[2] == -1){
+        if (skor[2] == -1) {
             benpuan3.setText("");
             benpuan3.setBackground(Color.white);
         }
-        if(skor[3] == -1){
+        if (skor[3] == -1) {
             benpuan4.setText("");
             benpuan4.setBackground(Color.white);
         }
-        if(skor[4] == -1){
+        if (skor[4] == -1) {
             benpuan5.setText("");
             benpuan5.setBackground(Color.white);
         }
-        if(skor[5] == -1){
+        if (skor[5] == -1) {
             benpuan6.setText("");
             benpuan6.setBackground(Color.white);
         }
-        if(skor[7] == -1){
+        if (skor[7] == -1) {
             benpuan8.setText("");
             benpuan8.setBackground(Color.white);
         }
-        if(skor[8] == -1){
+        if (skor[8] == -1) {
             benpuan9.setText("");
             benpuan9.setBackground(Color.white);
         }
-        if(skor[9] == -1){
+        if (skor[9] == -1) {
             benpuan10.setText("");
             benpuan10.setBackground(Color.white);
         }
-        if(skor[10] == -1){
+        if (skor[10] == -1) {
             benpuan11.setText("");
             benpuan11.setBackground(Color.white);
         }
-        if(skor[11] == -1){
+        if (skor[11] == -1) {
             benpuan12.setText("");
             benpuan12.setBackground(Color.white);
         }
-        if(skor[12] == -1){
+        if (skor[12] == -1) {
             benpuan13.setText("");
             benpuan13.setBackground(Color.white);
         }
-        if(skor[13] == -1){
+        if (skor[13] == -1) {
             benpuan14.setText("");
             benpuan14.setBackground(Color.white);
         }
     }
-    
+
     //eğer masada hiç zar kalmamışsa, iyi kötü hepsini elimize almışsak
     //bunu kontrol edip tespit ediyoruz.
     //eğer tespit edilirse, elimizdeki zarlara göre seçebileceğimiz
     //puanları getirecek metodu çağırıyoruz.
-    public void kontrol_et(){
+    public void kontrol_et() {
         puansiz_labelleri_sifirla();
-        int sayac=0;
-        for(int i:ortadakiZarlarinDegerleri)
-            sayac+=i;
-        if(sayac==0 && islemSirasi>2 && islemSirasi<6){
+        int sayac = 0;
+        for (int i : ortadakiZarlarinDegerleri) {
+            sayac += i;
+        }
+        if (sayac == 0 && islemSirasi > 2 && islemSirasi < 6) {
             zarlara_gore_puanlari_getir();
         }
     }
-    
-    public void zarlari_at(){
-        //önce masadaki zarlara rasgele değerler alalım.
-        //sonra bu değerlere ait olan zar resimlerini alalım.
-        //masadaki zar null ise kenara ayırmış olabiliriz.
-        if(ortadakiZarlarinDegerleri[0]!=0){
-            ortadakiZarlarinDegerleri[0]=op.randomZarGetir();
-            masazar1.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[0]]);
-        }
-        if(ortadakiZarlarinDegerleri[1]!=0){
-            ortadakiZarlarinDegerleri[1]=op.randomZarGetir();
-            masazar2.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[1]]);
-        }
-        if(ortadakiZarlarinDegerleri[2]!=0){
-            ortadakiZarlarinDegerleri[2]=op.randomZarGetir();
-            masazar3.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[2]]);
-        }
-        if(ortadakiZarlarinDegerleri[3]!=0){
-            ortadakiZarlarinDegerleri[3]=op.randomZarGetir();
-            masazar4.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[3]]);
-        }
-        if(ortadakiZarlarinDegerleri[4]!=0){
-            ortadakiZarlarinDegerleri[4]=op.randomZarGetir();
-            masazar5.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[4]]);
-        }
-    }
-    
-    public void elindeki_zarlari_at(){
-        ortadakiZarlarinDegerleri[0]=op.randomZarGetir();
-        ortadakiZarlarinDegerleri[1]=op.randomZarGetir();
-        ortadakiZarlarinDegerleri[2]=op.randomZarGetir();
-        ortadakiZarlarinDegerleri[3]=op.randomZarGetir();
-        ortadakiZarlarinDegerleri[4]=op.randomZarGetir();
+
+    public void masadaki_zarlarin_resimlerini_guncelle(boolean kordinatDegistir) {
         masazar1.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[0]]);
         masazar2.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[1]]);
         masazar3.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[2]]);
         masazar4.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[3]]);
         masazar5.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[4]]);
-        
-        zarlarinDegerleri[0]=0;
-        zarlarinDegerleri[1]=0;
-        zarlarinDegerleri[2]=0;
-        zarlarinDegerleri[3]=0;
-        zarlarinDegerleri[4]=0;
-        
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar2.setIcon(zar_resimleri[0]);
-        benzar3.setIcon(zar_resimleri[0]);
-        benzar4.setIcon(zar_resimleri[0]);
-        benzar5.setIcon(zar_resimleri[0]);
+
+        if(kordinatDegistir){
+            masazar1.setLocation(op.addToX(), op.addToY());
+            masazar2.setLocation(100 + op.addToX(), op.addToY());
+            masazar3.setLocation(200 + op.addToX(), op.addToY());
+            masazar4.setLocation(300 + op.addToX(), op.addToY());
+            masazar5.setLocation(400 + op.addToX(), op.addToY());
+        }
     }
 
-    public void ilk_sira_zarlari_at(){
-        //önce masadaki zarlara rasgele değerler alalım.
-        //sonra bu değerlere ait olan zar resimlerini alalım.
-        zarlarinDegerleri[0]=op.randomZarGetir();
-        zarlarinDegerleri[1]=op.randomZarGetir();
-        zarlarinDegerleri[2]=op.randomZarGetir();
-        zarlarinDegerleri[3]=op.randomZarGetir();
-        zarlarinDegerleri[4]=op.randomZarGetir();
-        
+    public void eldeki_zarlarin_resimlerini_guncelle() {
         benzar1.setIcon(zar_resimleri[zarlarinDegerleri[0]]);
         benzar2.setIcon(zar_resimleri[zarlarinDegerleri[1]]);
         benzar3.setIcon(zar_resimleri[zarlarinDegerleri[2]]);
         benzar4.setIcon(zar_resimleri[zarlarinDegerleri[3]]);
         benzar5.setIcon(zar_resimleri[zarlarinDegerleri[4]]);
-        
-        for(int i=0;i<5;i++)
-            ortadakiZarlarinDegerleri[i]=0;
     }
-    
-    public void butun_zarlari_sifirla(){
+
+    public void zarlari_at() {
+        //önce masadaki zarlara rasgele değerler alalım.
+        //sonra bu değerlere ait olan zar resimlerini alalım.
+        //masadaki zar null ise kenara ayırmış olabiliriz.
+        if (ortadakiZarlarinDegerleri[0] != 0) {
+            ortadakiZarlarinDegerleri[0] = op.randomZarGetir();
+        }
+        if (ortadakiZarlarinDegerleri[1] != 0) {
+            ortadakiZarlarinDegerleri[1] = op.randomZarGetir();
+        }
+        if (ortadakiZarlarinDegerleri[2] != 0) {
+            ortadakiZarlarinDegerleri[2] = op.randomZarGetir();
+        }
+        if (ortadakiZarlarinDegerleri[3] != 0) {
+            ortadakiZarlarinDegerleri[3] = op.randomZarGetir();
+        }
+        if (ortadakiZarlarinDegerleri[4] != 0) {
+            ortadakiZarlarinDegerleri[4] = op.randomZarGetir();
+        }
+        masadaki_zarlarin_resimlerini_guncelle(true);
+
+    }
+
+    public void elindeki_zarlari_at() {
+        ortadakiZarlarinDegerleri[0] = op.randomZarGetir();
+        ortadakiZarlarinDegerleri[1] = op.randomZarGetir();
+        ortadakiZarlarinDegerleri[2] = op.randomZarGetir();
+        ortadakiZarlarinDegerleri[3] = op.randomZarGetir();
+        ortadakiZarlarinDegerleri[4] = op.randomZarGetir();
+        masadaki_zarlarin_resimlerini_guncelle(true);
+
+        zarlarinDegerleri[0] = 0;
+        zarlarinDegerleri[1] = 0;
+        zarlarinDegerleri[2] = 0;
+        zarlarinDegerleri[3] = 0;
+        zarlarinDegerleri[4] = 0;
+        eldeki_zarlarin_resimlerini_guncelle();
+    }
+
+    public void ilk_sira_zarlari_at() {
+        //önce masadaki zarlara rasgele değerler alalım.
+        //sonra bu değerlere ait olan zar resimlerini alalım.
+        zarlarinDegerleri[0] = op.randomZarGetir();
+        zarlarinDegerleri[1] = op.randomZarGetir();
+        zarlarinDegerleri[2] = op.randomZarGetir();
+        zarlarinDegerleri[3] = op.randomZarGetir();
+        zarlarinDegerleri[4] = op.randomZarGetir();
+        eldeki_zarlarin_resimlerini_guncelle();
+    }
+
+    public void butun_zarlari_sifirla() {
         rakipzar1.setIcon(zar_resimleri[0]);
         rakipzar2.setIcon(zar_resimleri[0]);
         rakipzar3.setIcon(zar_resimleri[0]);
         rakipzar4.setIcon(zar_resimleri[0]);
         rakipzar5.setIcon(zar_resimleri[0]);
-        
-        masazar1.setIcon(zar_resimleri[0]);
-        masazar2.setIcon(zar_resimleri[0]);
-        masazar3.setIcon(zar_resimleri[0]);
-        masazar4.setIcon(zar_resimleri[0]);
-        masazar5.setIcon(zar_resimleri[0]);
-        
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar1.setIcon(zar_resimleri[0]);
+
+        for (int i = 0; i < 5; i++) {
+            zarlarinDegerleri[i] = 0;
+            ortadakiZarlarinDegerleri[i] = 0;
+        }
+
+        masadaki_zarlarin_resimlerini_guncelle(true);
+        eldeki_zarlarin_resimlerini_guncelle();
     }
-    
-    public void puani_ekle(int puan,int index){
+
+    public void puani_ekle(int puan, int index) {
         skor[index] = puan;
         zarla.setEnabled(false);
-        
-        if(skor[0] == -1){
+
+        if (skor[0] == -1) {
             benpuan1.setText("");
             benpuan1.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 0){
+        } else if (index == 0) {
             benpuan1.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[1] == -1){
+        if (skor[1] == -1) {
             benpuan2.setText("");
             benpuan2.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 1){
+        } else if (index == 1) {
             benpuan2.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[2] == -1){
+        if (skor[2] == -1) {
             benpuan3.setText("");
             benpuan3.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 2){
+        } else if (index == 2) {
             benpuan3.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[3] == -1){
+        if (skor[3] == -1) {
             benpuan4.setText("");
             benpuan4.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 3){
+        } else if (index == 3) {
             benpuan4.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[4] == -1){
+        if (skor[4] == -1) {
             benpuan5.setText("");
             benpuan5.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 4){
+        } else if (index == 4) {
             benpuan5.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[5] == -1){
+        if (skor[5] == -1) {
             benpuan6.setText("");
             benpuan6.setBackground(Color.white);
             ustPuanSayac++;
-        }else if(index == 5){
+        } else if (index == 5) {
             benpuan6.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[7] == -1){
+        if (skor[7] == -1) {
             benpuan8.setText("");
             benpuan8.setBackground(Color.white);
-        }else if(index == 7){
+        } else if (index == 7) {
             benpuan8.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[8] == -1){
+        if (skor[8] == -1) {
             benpuan9.setText("");
             benpuan9.setBackground(Color.white);
-        }else if(index == 8){
+        } else if (index == 8) {
             benpuan9.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[9] == -1){
+        if (skor[9] == -1) {
             benpuan10.setText("");
             benpuan10.setBackground(Color.white);
-        }else if(index == 9){
+        } else if (index == 9) {
             benpuan10.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[10] == -1){
+        if (skor[10] == -1) {
             benpuan11.setText("");
             benpuan11.setBackground(Color.white);
-        }else if(index == 10){
+        } else if (index == 10) {
             benpuan11.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[11] == -1){
+        if (skor[11] == -1) {
             benpuan12.setText("");
             benpuan12.setBackground(Color.white);
-        }else if(index == 11){
+        } else if (index == 11) {
             benpuan12.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[12] == -1){
+        if (skor[12] == -1) {
             benpuan13.setText("");
             benpuan13.setBackground(Color.white);
-        }else if(index == 12){
+        } else if (index == 12) {
             benpuan13.setBackground(Color.green);
             bittiMi++;
         }
-        if(skor[13] == -1){
+        if (skor[13] == -1) {
             benpuan14.setText("");
             benpuan14.setBackground(Color.white);
-        }else if(index == 13){
+        } else if (index == 13) {
             benpuan14.setBackground(Color.green);
             bittiMi++;
         }
-        
-        
+
         int ustPuan = 0;
-        for(int i=0;i<6;i++)
-            if(skor[i] != -1)
-                ustPuan+=skor[i];
-                
+        for (int i = 0; i < 6; i++) {
+            if (skor[i] != -1) {
+                ustPuan += skor[i];
+            }
+        }
+
         int altPuan = 0;
-        for(int i=7;i<14;i++)
-            if(skor[i] != -1)
-                altPuan+=skor[i];
-        
-        if(ustPuanSayac == 6){
-            if(ustPuan>=65){
-                ustPuan+=30;
+        for (int i = 7; i < 14; i++) {
+            if (skor[i] != -1) {
+                altPuan += skor[i];
+            }
+        }
+
+        if (ustPuanSayac == 6) {
+            if (ustPuan >= 65) {
+                ustPuan += 30;
                 ustPuanSayac = 7;
             }
         }
@@ -568,94 +538,86 @@ public class Yahtzee extends javax.swing.JFrame {
         benpuan7.setText(String.valueOf(ustPuan));
         benpuan15.setText(String.valueOf(altPuan));
         benpuan16.setText(String.valueOf(genelPuan));
-        
-        islemSirasi+=1;
-        
-        sira = false; //bizim el bitti, sıra rakibe geçicek.
-        String rakibeMesaj = "";
-        
-        if(bittiMi == 2 && rakipBittiMi == 2){//13 olmalı bu erken bitsin diye.
-            rakibeMesaj = "K|ok~";
-            oyunOynaniyor = false;
-        }else{
-            rakibeMesaj = "Start|1~P|";
-            for(int i:skor)
-                rakibeMesaj = rakibeMesaj + String.valueOf(i)+"+";
+
+        islemSirasi = 0;
+        String rakibeMesaj = "Start|1~P|";
+        for (int i : skor) {
+            rakibeMesaj = rakibeMesaj + String.valueOf(i) + "+";
         }
-        
-        benzar1.setIcon(zar_resimleri[0]);
-        benzar2.setIcon(zar_resimleri[0]);
-        benzar3.setIcon(zar_resimleri[0]);
-        benzar4.setIcon(zar_resimleri[0]);
-        benzar5.setIcon(zar_resimleri[0]);
-        
+
+        butun_zarlari_sifirla();
         //mesajı rakibe gönderelim.
         Message msg = new Message(Message.Message_Type.Selected);
         msg.content = rakibeMesaj;
         Client.Send(msg);
-        if(!oyunOynaniyor)
+        bitis_kontrol();
+    }
+
+    public void bitis_kontrol() {
+        if (bittiMi == 13 && rakipBittiMi == 13) {
             kim_kazandi();
-        
-        butun_zarlari_sifirla();
+            zarla.setEnabled(false);
+            islemSirasi = -1;
+            durum.setText("Oyun Bitti.");
+            Message msg = new Message(Message.Message_Type.Bitis);
+            Client.Send(msg);
+            baglanbutton.setEnabled(true);
+        }
     }
-    
-    public void kim_kazandi(){
+
+    public void kim_kazandi() {
         String kazanan = "";
-        if(Integer.parseInt(benpuan16.getText())>Integer.parseInt(rakippuan16.getText()))
+        if (Integer.parseInt(benpuan16.getText()) > Integer.parseInt(rakippuan16.getText())) {
             kazanan = "SEN";
-        else if(Integer.parseInt(benpuan16.getText())<Integer.parseInt(rakippuan16.getText()))
+        } else if (Integer.parseInt(benpuan16.getText()) < Integer.parseInt(rakippuan16.getText())) {
             kazanan = "RAKİP";
-        else
+        } else {
             kazanan = "BERABERE";
-        JOptionPane.showMessageDialog(null,("Puanın: "+benpuan16.getText()+" Rakip: "+rakippuan16.getText()+" \nKazanan: "+kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
+        }
+        JOptionPane.showMessageDialog(null, ("Puanın: " + benpuan16.getText() + " Rakip: " + rakippuan16.getText() + " \nKazanan: " + kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    public void Reset(){
-        if (Client.socket!=null) {
-            if (Client.socket.isConnected())
-            {
+
+    public void Reset() {
+        if (Client.socket != null) {
+            if (Client.socket.isConnected()) {
                 Client.Stop();
             }
         }
-    //oyun bitiminde hangi şeyler enable false olacaksa onlar oluyor.
+        //oyun bitiminde hangi şeyler enable false olacaksa onlar oluyor.
     }
-    
-    public void rakibe_oynadigini_gonder(){
+
+    public void rakibe_oynadigini_gonder() {
         Message msg = new Message(Message.Message_Type.Selected);
-        msg.content = "Z|"+
-                ortadakiZarlarinDegerleri[0]+
-                ortadakiZarlarinDegerleri[1]+
-                ortadakiZarlarinDegerleri[2]+
-                ortadakiZarlarinDegerleri[3]+
-                ortadakiZarlarinDegerleri[4]+
-                zarlarinDegerleri[0]+
-                zarlarinDegerleri[1]+
-                zarlarinDegerleri[2]+
-                zarlarinDegerleri[3]+
-                zarlarinDegerleri[4];
+        msg.content = "Z|"
+                + ortadakiZarlarinDegerleri[0]
+                + ortadakiZarlarinDegerleri[1]
+                + ortadakiZarlarinDegerleri[2]
+                + ortadakiZarlarinDegerleri[3]
+                + ortadakiZarlarinDegerleri[4]
+                + zarlarinDegerleri[0]
+                + zarlarinDegerleri[1]
+                + zarlarinDegerleri[2]
+                + zarlarinDegerleri[3]
+                + zarlarinDegerleri[4];
         Client.Send(msg);
     }
-    
-    public void rakibin_oynayisi_goster(String zarlar){
-        masazar1.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(6)+"")]);
-        masazar2.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(5)+"")]);
-        masazar3.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(4)+"")]);
-        masazar4.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(3)+"")]);
-        masazar5.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(2)+"")]);
-        
-        rakipzar1.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(11)+"")]);
-        rakipzar2.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(10)+"")]);
-        rakipzar3.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(9)+"")]);
-        rakipzar4.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(8)+"")]);
-        rakipzar5.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(7)+"")]);
-        
-        masazar1.setLocation(op.addToX(), op.addToY());
-        masazar2.setLocation(100+op.addToX(), op.addToY());
-        masazar3.setLocation(200+op.addToX(), op.addToY());
-        masazar4.setLocation(300+op.addToX(), op.addToY());
-        masazar5.setLocation(400+op.addToX(), op.addToY());
+
+    public void rakibin_oynayisi_goster(String zarlar) {
+        ortadakiZarlarinDegerleri[0] = Integer.parseInt(zarlar.charAt(6) + "");
+        ortadakiZarlarinDegerleri[1] = Integer.parseInt(zarlar.charAt(5) + "");
+        ortadakiZarlarinDegerleri[2] = Integer.parseInt(zarlar.charAt(4) + "");
+        ortadakiZarlarinDegerleri[3] = Integer.parseInt(zarlar.charAt(3) + "");
+        ortadakiZarlarinDegerleri[4] = Integer.parseInt(zarlar.charAt(2) + "");
+
+        rakipzar1.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(11) + "")]);
+        rakipzar2.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(10) + "")]);
+        rakipzar3.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(9) + "")]);
+        rakipzar4.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(8) + "")]);
+        rakipzar5.setIcon(zar_resimleri[Integer.parseInt(zarlar.charAt(7) + "")]);
+
+        masadaki_zarlarin_resimlerini_guncelle(false);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1218,15 +1180,19 @@ public class Yahtzee extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void baglanbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_baglanbuttonActionPerformed
-        //bağlanılacak server ve portu veriyoruz
-        Client.Start("127.0.0.1", 2000);
-        //başlangıç durumları
-        durum.setText("Durum: Rakip Bekleniyor...");
-        baglanbutton.setEnabled(false);
-        Message msg = new Message(Message.Message_Type.Startt);
-        msg.content = "";
-        Client.Send(msg);
-        
+        try {
+            //bağlanılacak server ve portu veriyoruz
+            Client.Start("127.0.0.1", 2000);
+            //başlangıç durumları
+            durum.setText("Durum: Rakip Bekleniyor...");
+            baglanbutton.setEnabled(false);
+            Message msg = new Message(Message.Message_Type.Startt);
+            Client.Send(msg);
+        } catch (Exception e) {
+            baglanbutton.setEnabled(true);
+            durum.setText("Server ile bağlantı kurulamadı.");
+        }
+
     }//GEN-LAST:event_baglanbuttonActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -1237,39 +1203,41 @@ public class Yahtzee extends javax.swing.JFrame {
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         zarla.setEnabled(false);
         //masadaki zarların değerlerini atıyoruz.
-        for(int i=0;i<5;i++){
+        for (int i = 0; i < 5; i++) {
             zarlarinDegerleri[i] = 0;
             ortadakiZarlarinDegerleri[i] = 0;
         }
-        for(int i=0;i<16;i++){
+        for (int i = 0; i < 16; i++) {
             skor[i] = -1;
             rakipSkor[i] = -1;
         }
-        skor[6]=0;
-        skor[14]=0;
-        skor[15]=0;
-        rakipSkor[6]=0;
-        rakipSkor[14]=0;
-        rakipSkor[15]=0;
+        skor[6] = 0;
+        skor[14] = 0;
+        skor[15] = 0;
+        rakipSkor[6] = 0;
+        rakipSkor[14] = 0;
+        rakipSkor[15] = 0;
         benpuan7.setText("0");
         benpuan15.setText("0");
         benpuan16.setText("0");
         benpuan7.setBackground(Color.green);
         benpuan15.setBackground(Color.green);
         benpuan16.setBackground(Color.green);
-        
+
+        //zarların üstünde nokta var. nokta silinirse zarları göremeyiz birdaha
+        //oyüzden noktayı kod ile siliyoruz geçici olarak.
         rakipzar1.setText("");
         rakipzar2.setText("");
         rakipzar3.setText("");
         rakipzar4.setText("");
         rakipzar5.setText("");
-        
+
         masazar1.setText("");
         masazar2.setText("");
         masazar3.setText("");
         masazar4.setText("");
         masazar5.setText("");
-        
+
         benzar1.setText("");
         benzar2.setText("");
         benzar3.setText("");
@@ -1279,32 +1247,26 @@ public class Yahtzee extends javax.swing.JFrame {
 
     private void zarlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zarlaActionPerformed
         op = new Operations();
-        if(islemSirasi==2){
+        if (islemSirasi == 2) {
             islemSirasi++;
             elindeki_zarlari_at();
-        }else if(islemSirasi==3){
+        } else if (islemSirasi == 3) {
             islemSirasi++;
             zarlari_at();
-        }else if(islemSirasi==4){
+        } else if (islemSirasi == 4) {
             islemSirasi++;
             zarlari_at();
             zarla.setEnabled(false);
         }
-        masazar1.setLocation(op.addToX(), op.addToY());
-        masazar2.setLocation(100+op.addToX(), op.addToY());
-        masazar3.setLocation(200+op.addToX(), op.addToY());
-        masazar4.setLocation(300+op.addToX(), op.addToY());
-        masazar5.setLocation(400+op.addToX(), op.addToY());
-        
         //butona tıklayıp masaya zarları attık, bunu rakibe gönderelim ki masayı görsün.
         rakibe_oynadigini_gonder();
     }//GEN-LAST:event_zarlaActionPerformed
 
     private void benzar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar1MouseClicked
-        if(ortadakiZarlarinDegerleri[0]==0 && islemSirasi>2 && islemSirasi<6){
+        if (ortadakiZarlarinDegerleri[0] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             masazar1.setIcon(zar_resimleri[zarlarinDegerleri[0]]);
-            ortadakiZarlarinDegerleri[0]=zarlarinDegerleri[0];
-            zarlarinDegerleri[0]=0;
+            ortadakiZarlarinDegerleri[0] = zarlarinDegerleri[0];
+            zarlarinDegerleri[0] = 0;
             benzar1.setIcon(zar_resimleri[0]);
             masazar1.setLocation(op.addToX(), op.addToY());
             kontrol_et();
@@ -1313,58 +1275,58 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_benzar1MouseClicked
 
     private void benzar2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar2MouseClicked
-        if(ortadakiZarlarinDegerleri[1]==0 && islemSirasi>2 && islemSirasi<6){
+        if (ortadakiZarlarinDegerleri[1] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             masazar2.setIcon(zar_resimleri[zarlarinDegerleri[1]]);
-            ortadakiZarlarinDegerleri[1]=zarlarinDegerleri[1];
-            zarlarinDegerleri[1]=0;
+            ortadakiZarlarinDegerleri[1] = zarlarinDegerleri[1];
+            zarlarinDegerleri[1] = 0;
             benzar2.setIcon(zar_resimleri[0]);
-            masazar2.setLocation(100+op.addToX(), op.addToY());
+            masazar2.setLocation(100 + op.addToX(), op.addToY());
             kontrol_et();
             rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar2MouseClicked
 
     private void benzar3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar3MouseClicked
-        if(ortadakiZarlarinDegerleri[2]==0 && islemSirasi>2 && islemSirasi<6){
+        if (ortadakiZarlarinDegerleri[2] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             masazar3.setIcon(zar_resimleri[zarlarinDegerleri[2]]);
-            ortadakiZarlarinDegerleri[2]=zarlarinDegerleri[2];
-            zarlarinDegerleri[2]=0;
+            ortadakiZarlarinDegerleri[2] = zarlarinDegerleri[2];
+            zarlarinDegerleri[2] = 0;
             benzar3.setIcon(zar_resimleri[0]);
-            masazar3.setLocation(200+op.addToX(), op.addToY());
+            masazar3.setLocation(200 + op.addToX(), op.addToY());
             kontrol_et();
             rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar3MouseClicked
 
     private void benzar4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar4MouseClicked
-        if(ortadakiZarlarinDegerleri[3]==0 && islemSirasi>2 && islemSirasi<6){
+        if (ortadakiZarlarinDegerleri[3] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             masazar4.setIcon(zar_resimleri[zarlarinDegerleri[3]]);
-            ortadakiZarlarinDegerleri[3]=zarlarinDegerleri[3];
-            zarlarinDegerleri[3]=0;
+            ortadakiZarlarinDegerleri[3] = zarlarinDegerleri[3];
+            zarlarinDegerleri[3] = 0;
             benzar4.setIcon(zar_resimleri[0]);
-            masazar4.setLocation(300+op.addToX(), op.addToY());
+            masazar4.setLocation(300 + op.addToX(), op.addToY());
             kontrol_et();
             rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar4MouseClicked
 
     private void benzar5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar5MouseClicked
-        if(ortadakiZarlarinDegerleri[4]==0 && islemSirasi>2 && islemSirasi<6){
+        if (ortadakiZarlarinDegerleri[4] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             masazar5.setIcon(zar_resimleri[zarlarinDegerleri[4]]);
-            ortadakiZarlarinDegerleri[4]=zarlarinDegerleri[4];
-            zarlarinDegerleri[4]=0;
+            ortadakiZarlarinDegerleri[4] = zarlarinDegerleri[4];
+            zarlarinDegerleri[4] = 0;
             benzar5.setIcon(zar_resimleri[0]);
-            masazar5.setLocation(400+op.addToX(), op.addToY());
+            masazar5.setLocation(400 + op.addToX(), op.addToY());
             kontrol_et();
             rakibe_oynadigini_gonder();
         }
     }//GEN-LAST:event_benzar5MouseClicked
 
     private void masazar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar1MouseClicked
-        if(zarlarinDegerleri[0]==0 && islemSirasi>2 && islemSirasi<6){
+        if (zarlarinDegerleri[0] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar1.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[0]]);
-            zarlarinDegerleri[0]=ortadakiZarlarinDegerleri[0];
-            ortadakiZarlarinDegerleri[0]=0;
+            zarlarinDegerleri[0] = ortadakiZarlarinDegerleri[0];
+            ortadakiZarlarinDegerleri[0] = 0;
             masazar1.setIcon(zar_resimleri[0]);
             kontrol_et();
             rakibe_oynadigini_gonder();
@@ -1372,10 +1334,10 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar1MouseClicked
 
     private void masazar2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar2MouseClicked
-        if(zarlarinDegerleri[1]==0 && islemSirasi>2 && islemSirasi<6){
+        if (zarlarinDegerleri[1] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar2.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[1]]);
-            zarlarinDegerleri[1]=ortadakiZarlarinDegerleri[1];
-            ortadakiZarlarinDegerleri[1]=0;
+            zarlarinDegerleri[1] = ortadakiZarlarinDegerleri[1];
+            ortadakiZarlarinDegerleri[1] = 0;
             masazar2.setIcon(zar_resimleri[0]);
             kontrol_et();
             rakibe_oynadigini_gonder();
@@ -1383,10 +1345,10 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar2MouseClicked
 
     private void masazar3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar3MouseClicked
-        if(zarlarinDegerleri[2]==0 && islemSirasi>2 && islemSirasi<6){
+        if (zarlarinDegerleri[2] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar3.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[2]]);
-            zarlarinDegerleri[2]=ortadakiZarlarinDegerleri[2];
-            ortadakiZarlarinDegerleri[2]=0;
+            zarlarinDegerleri[2] = ortadakiZarlarinDegerleri[2];
+            ortadakiZarlarinDegerleri[2] = 0;
             masazar3.setIcon(zar_resimleri[0]);
             kontrol_et();
             rakibe_oynadigini_gonder();
@@ -1394,10 +1356,10 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar3MouseClicked
 
     private void masazar4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar4MouseClicked
-        if(zarlarinDegerleri[3]==0 && islemSirasi>2 && islemSirasi<6){
+        if (zarlarinDegerleri[3] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar4.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[3]]);
-            zarlarinDegerleri[3]=ortadakiZarlarinDegerleri[3];
-            ortadakiZarlarinDegerleri[3]=0;
+            zarlarinDegerleri[3] = ortadakiZarlarinDegerleri[3];
+            ortadakiZarlarinDegerleri[3] = 0;
             masazar4.setIcon(zar_resimleri[0]);
             kontrol_et();
             rakibe_oynadigini_gonder();
@@ -1405,10 +1367,10 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar4MouseClicked
 
     private void masazar5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar5MouseClicked
-        if(zarlarinDegerleri[4]==0 && islemSirasi>2 && islemSirasi<6){
+        if (zarlarinDegerleri[4] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar5.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[4]]);
-            zarlarinDegerleri[4]=ortadakiZarlarinDegerleri[4];
-            ortadakiZarlarinDegerleri[4]=0;
+            zarlarinDegerleri[4] = ortadakiZarlarinDegerleri[4];
+            ortadakiZarlarinDegerleri[4] = 0;
             masazar5.setIcon(zar_resimleri[0]);
             kontrol_et();
             rakibe_oynadigini_gonder();
@@ -1416,80 +1378,80 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar5MouseClicked
 
     private void benpuan1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan1MouseClicked
-        if(skor[0]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan1.getText()),0);
+        if (skor[0] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan1.getText()), 0);
         }
     }//GEN-LAST:event_benpuan1MouseClicked
 
     private void benpuan2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan2MouseClicked
-        if(skor[1]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan2.getText()),1);
+        if (skor[1] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan2.getText()), 1);
         }
     }//GEN-LAST:event_benpuan2MouseClicked
 
     private void benpuan3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan3MouseClicked
-        if(skor[2]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan3.getText()),2);
+        if (skor[2] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan3.getText()), 2);
         }
     }//GEN-LAST:event_benpuan3MouseClicked
 
     private void benpuan4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan4MouseClicked
-        if(skor[3]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan4.getText()),3);
+        if (skor[3] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan4.getText()), 3);
         }
     }//GEN-LAST:event_benpuan4MouseClicked
 
     private void benpuan5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan5MouseClicked
-        if(skor[4]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan5.getText()),4);
+        if (skor[4] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan5.getText()), 4);
         }
     }//GEN-LAST:event_benpuan5MouseClicked
 
     private void benpuan6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan6MouseClicked
-        if(skor[5]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan6.getText()),5);
+        if (skor[5] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan6.getText()), 5);
         }
     }//GEN-LAST:event_benpuan6MouseClicked
 
     private void benpuan8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan8MouseClicked
-        if(skor[7]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan8.getText()),7);
+        if (skor[7] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan8.getText()), 7);
         }
     }//GEN-LAST:event_benpuan8MouseClicked
 
     private void benpuan9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan9MouseClicked
-        if(skor[8]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan9.getText()),8);
+        if (skor[8] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan9.getText()), 8);
         }
     }//GEN-LAST:event_benpuan9MouseClicked
 
     private void benpuan10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan10MouseClicked
-        if(skor[9]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan10.getText()),9);
+        if (skor[9] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan10.getText()), 9);
         }
     }//GEN-LAST:event_benpuan10MouseClicked
 
     private void benpuan11MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan11MouseClicked
-        if(skor[10]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan11.getText()),10);
+        if (skor[10] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan11.getText()), 10);
         }
     }//GEN-LAST:event_benpuan11MouseClicked
 
     private void benpuan12MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan12MouseClicked
-        if(skor[11]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan12.getText()),11);
+        if (skor[11] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan12.getText()), 11);
         }
     }//GEN-LAST:event_benpuan12MouseClicked
 
     private void benpuan13MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan13MouseClicked
-        if(skor[12]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan13.getText()),12);
+        if (skor[12] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan13.getText()), 12);
         }
     }//GEN-LAST:event_benpuan13MouseClicked
 
     private void benpuan14MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan14MouseClicked
-        if(skor[13]==-1 && islemSirasi>2 && islemSirasi<6){
-            puani_ekle(Integer.parseInt(benpuan14.getText()),13);
+        if (skor[13] == -1 && islemSirasi > 2 && islemSirasi < 6) {
+            puani_ekle(Integer.parseInt(benpuan14.getText()), 13);
         }
     }//GEN-LAST:event_benpuan14MouseClicked
 

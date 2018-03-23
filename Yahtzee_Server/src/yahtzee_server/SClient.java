@@ -77,8 +77,7 @@ public class SClient {
                     //mesajı bekleyen kod satırı
                     Message received = (Message) (TheClient.sInput.readObject());
                     //mesaj gelirse bu satıra geçer
-                    //mesaj tipine göre işlemlere ayır
-                    
+                    //mesaj tipine göre işlemlere ayır                 
                     switch (received.type) {
                         case Startt:
                             //eşleştirme işlemine başla
@@ -92,16 +91,13 @@ public class SClient {
                             break;
                         case Bitis:
                             break;
-
                     }
 
                 } catch (IOException ex) {
-                    Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
                     //client bağlantısı koparsa listeden sil
                     Server.Clients.remove(TheClient);
 
                 } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
                     //client bağlantısı koparsa listeden sil
                     Server.Clients.remove(TheClient);
                 }
@@ -122,7 +118,7 @@ public class SClient {
 
         public void run() {
             //client bağlı ve eşleşmemiş olduğu durumda dön
-            while (TheClient.soket.isConnected() && TheClient.paired == false) {
+            while (TheClient.soket.isConnected() && !TheClient.paired) {
                 try {
                     //lock mekanizması
                     //sadece bir client içeri grebilir
@@ -175,7 +171,6 @@ public class SClient {
                     //bırakılmazsa deadlock olur.
                     Server.pairTwo.release(1);
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(PairingThread.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }

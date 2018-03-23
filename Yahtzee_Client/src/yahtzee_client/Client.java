@@ -85,13 +85,12 @@ public class Client {
             Client.sOutput = new ObjectOutputStream(Client.socket.getOutputStream());
             Client.listenMe = new Listen();
             Client.listenMe.start();
-            
+
             //ilk mesaj olarak isim gönderiyorum
 //            Message msg = new Message(Message.Message_Type.Name);
 //            msg.content = Game.ThisGame.txt_name.getText();
 //            Client.Send(msg);
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {/*Server ile bağlantı kurulamamış, hata verme*/
         }
     }
 
@@ -109,13 +108,10 @@ public class Client {
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     public static void Display(String msg) {
-
         System.out.println(msg);
-
     }
 
     //mesaj gönderme fonksiyonu
@@ -125,7 +121,5 @@ public class Client {
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
-
 }

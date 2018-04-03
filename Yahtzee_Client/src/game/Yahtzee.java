@@ -13,15 +13,28 @@ public class Yahtzee extends javax.swing.JFrame {
     public static Yahtzee ThisGame;
     //ekrandaki resim değişimi için timer yerine thread
     public Thread tmr_slider;
+    //zar resimleri için dizi
     ImageIcon zar_resimleri[];
+    //bizim ve rakibin gösterilen puan değerlerini tutacak diziler.
     private int[] skor = new int[16];
     private int[] rakipSkor = new int[16];
-    private int[] zarlarinDegerleri = new int[5];
+    //bizim elimizdeki zarların değerlerini tutacak dizi
+    private int[] elindekiZarlarinDegerleri = new int[5];
+    //masadaki zarların değerlerini tutacak olan dizi
+    //zar varsa 1,2,3,4,5,6 eğer yoksa 0
     private int[] ortadakiZarlarinDegerleri = new int[5];
-    public String islem = "";
+    //serverdan yada rakipten gelen mesajlar direkt bu değişkene geliyor.
+    public String gelenMesaj = "";
+    //bir el 3 kere zar atmayla oynanıyor ve tabi bunun öncesi ve sonrası da var
+    //oyun sırası bizdeyken oyunun hangi adımında olduğumuzun kaydını tutuyor.
     public int islemSirasi = 0;
     Operations op;
+    //üst puanımız 65 ve üstüyse +30 puan bonus geliyor ve bu ekstra puan
+    //65 puan tamamlanır tamamlanmaz ekleniyor. Tamamlanıp tamamlanmadığı bilgisini
+    //sayac modeliyle tutan değişken.
     private int ustPuanSayac = 0;
+    //bizim yada rakibin oyununun bitip bitmediğinin kontrolünü yapacağımız değişkenler
+    //toplamda 14 kere oynadıysak bütün puanlar bitmiş olmalı. Bunu sayaç gibi tutuyorlar.
     private int bittiMi = 0, rakipBittiMi = 0;
 
     public Yahtzee() {
@@ -29,7 +42,10 @@ public class Yahtzee extends javax.swing.JFrame {
         op = new Operations();
         ThisGame = this;
         try {
-            zar_resimleri = new ImageIcon[7];//rakibin zar resimleri için
+            //zar resimlerini tutacak olan diziye bütün zar resimlerini yüklüyoruz.
+            //sıfırıncı zar boş resim demek hiç bir şey göstermiyor yani zar yok demek
+            //Zar yoksa labelde boş resim gösteriyoruz, zar yokmuş gibi görünüyor.
+            zar_resimleri = new ImageIcon[7];
             zar_resimleri[0] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/none.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zar_resimleri[1] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/1.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zar_resimleri[2] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/2.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
@@ -37,34 +53,48 @@ public class Yahtzee extends javax.swing.JFrame {
             zar_resimleri[4] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/4.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zar_resimleri[5] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/5.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
             zar_resimleri[6] = new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/6.png"))).getImage().getScaledInstance(75, 75, Image.SCALE_DEFAULT));
+            //Zarla butonuna resim koyuyoruz.
             zarla.setIcon(new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/dice.png"))).getImage().getScaledInstance(150, 50, Image.SCALE_DEFAULT)));
-
+            //tablonun labeli. Buna puan tablosu resmini yüklüyoruz.
             jLabel1.setIcon(new ImageIcon(new ImageIcon(ImageIO.read(this.getClass().getResource("/images/table.png"))).getImage().getScaledInstance(302, 573, Image.SCALE_DEFAULT)));
         } catch (Exception e) {
             System.out.println(e);
         }
 
-        // resimleri döndürmek için tread aynı zamanda oyun bitiminide takip ediyor
+        //rakipten yada serverden mesaj gelip gelmediğini ve oyunun akışının kontrolünü
+        //takip etmesi için thread kullanıyoruz.
         tmr_slider = new Thread(() -> {
             //soket bağlıysa dönsün
             while (Client.socket.isConnected()) {
                 try {
+                    //while 0,1 saniyede bir dönsün fazla işlem yapmasın.
                     Thread.sleep(100);
-                    //eğer islem stringine bir mesaj gelmişse yani boş değilse
-                    //aşağıdaki işlemleri yapsın.
-                    if (!islem.equals("")) {
+                    //eğer bir mesaj geldiyse bu string boş değildir.
+                    //boş değilse de aşağıdaki işlemleri yapsın ve boş olsun.
+                    if (!gelenMesaj.equals("")) {
                         //birden çok mesaj varsa bölelim.
-                        String[] msg = islem.split("~");
-                        islem = "";
+                        String[] msg = gelenMesaj.split("~");
+                        gelenMesaj = "";
                         for (String str : msg) {
                             //her mesajın içeriğini bölelim.
-                            //mesaj Start ile başlıyorsa oyuna kim başlayacak onu söyler.
+                            //mesaj Start ile başlıyorsa oyuna kim başlayacak
+                            //yada oyun sırası kimde onu söylüyor.
+                            //oynama hakkı 1 ise bizde, 0 ise rakiptedir.
                             if (str.equals("Start|1")) {
-                                //biz oynuyoruz
                                 islemSirasi = 1;
+                                //işlem sırasını güncelleyip bütün zar resimlerini sıfırlıyoruz.
                                 butun_zarlari_sifirla();
-                            } else if (str.charAt(0) == 'P') {
-                                //rakip oynayıp bitirmiş, bize puan sonuçlarını göndermiş.
+                            }else if(str.equals("Start|0")){
+                                islemSirasi = 0;
+                                butun_zarlari_sifirla();
+                            }else if (str.charAt(0) == 'P') {
+                                //rakip elini oynayıp bitirmiş ve bir puan seçmişse
+                                //bize bu bilgiyi içeren bir mesaj gönderiyor
+                                //bu mesaj da P ile başlıyor.
+                                //Bütün puanlar geldiğinden onları ayırıyoruz
+                                //ve ekranda rakibin puanlarını bunlara göre güncelliyoruz.
+                                //neden string bölme metotları kullanmadık dersek
+                                //nedense bu kısımda çalışmıyorlar, bölemiyoruz.
                                 int index = 0;
                                 String puan = "";
                                 for (int i = 2; i < str.length(); i++) {
@@ -76,32 +106,51 @@ public class Yahtzee extends javax.swing.JFrame {
                                         puan = puan + str.charAt(i);
                                     }
                                 }
+                                //rakibin puanlarının gösterildiği bölge güncellensin.
                                 rakip_puanlarini_goster();
-                            } else if (str.charAt(0) == 'Z') {
+                            } else if (str.charAt(0) == 'Z'){
+                                //Z ile başlayan bir mesaj gelmişse rakip bir zara tıklayıp
+                                //işlem yapmış demektir. Bu tıkladığı zarın işlemini konumunu
+                                //görebilmemiz için bize kendi elinin ve masanın zar gösterimlerini
+                                //yolluyor. Bunları metoda gönderip çözümlüyoruz ve ekranda gösteriyoruz
+                                //böylece rakibin her adımını takip edebiliyoruz.
                                 rakibin_oynayisi_goster(str);
+                            }
+                            else if(str.equals("Start|-1") && bittiMi!=13 && rakipBittiMi!=13){
+                                //rakip oyundan çıktıysa -1 mesajı gelir.
+                                //eğer oyun bitti de rakip çıktıysa buraya hiç girmesin.
+                                durum.setText("Rakip Oyundan Çıktı, Yeni oyun için yeniden başlat.");
+                                islemSirasi = -1;
+                                zarla.setEnabled(false);
+                                break;
                             }
                         }
                     }
                     if (islemSirasi == 1) {
                         durum.setText("Durum: Oynama Sırası Sende.");
+                        //ilk sıra zarlar, oyun sırası bize geldiğinde 
+                        //elimizde belirecek olan zarlardır. Rasgele geleceklerdir.
+                        //herhangi bir anlamları yok, masaya atıldıktan sonra anlamlılar.
                         ilk_sira_zarlari_at();
                         zarla.setEnabled(true);
                         islemSirasi = 2;
                     } else if (islemSirasi == 0) {
                         durum.setText("Durum: Oynama Sırası Rakipte.");
                     }
-                    //oyun bitimi takibi buradan yapılabilir.
-                    //tmr_slider.stop();
+                    //aşağıdaki kodlar işe yaramıyor, tekrar bağlanmıyor.
                     //7 saniye sonra oyun bitsin tekrar bağlansın
                     //Thread.sleep(7000);
                     //Reset();
                 } catch (Exception e) {
-                    System.out.println(e);
+                    //System.out.println(e);
                 }
             }
         });
     }
 
+    //rakip bize bir puan bilgisi göndermişse, rakibin gösterilen puanlarını
+    //bu metod sayesinde güncelliyoruz, ama tabi sadece seçilmiş puanları.
+    //henüz seçilmemiş kısımlar boş görünüyor.
     public void rakip_puanlarini_goster() {
         if (rakippuan1.getText().equals("") && rakipSkor[0] != -1) {
             rakippuan1.setText(String.valueOf(rakipSkor[0]));
@@ -178,13 +227,18 @@ public class Yahtzee extends javax.swing.JFrame {
         rakippuan15.setBackground(Color.BLACK);
         rakippuan16.setBackground(Color.BLACK);
 
+        //oyun bitti mi diye kontrol etmek lazım belki rakip bitirdi
+        //ve bize son puan durumunu gönderdi. Oynayamamamız lazım.
         bitis_kontrol();
     }
 
     //elimizdeki zarlara göre puanları hesaplayıp getiren metod.
+    //her zar oynattığımızda kontrolü yapılıyor ama sadece zarların
+    //hepsi elimizdeyse puanları getiriyor. Yani 3 kere zar attıktan sonra
+    //puanları görebilmek için tüm zarları elimize toplamak lazım.
     public void zarlara_gore_puanlari_getir() {
         op = new Operations();
-        int[] puanlar = op.puanlariGetir(zarlarinDegerleri);
+        int[] puanlar = op.puanlariGetir(elindekiZarlarinDegerleri);
         if (skor[0] == -1) {
             benpuan1.setText(String.valueOf(puanlar[0]));
             benpuan1.setBackground(Color.yellow);
@@ -246,9 +300,10 @@ public class Yahtzee extends javax.swing.JFrame {
 
         benpuan15.setText(String.valueOf(skor[14]));
         benpuan16.setText(String.valueOf(skor[15]));
-
     }
 
+    //bir puan seçildikten sonra puan seçme labellerinde hala seçilmeyen puanlar
+    //görünüyor. Bunları sıfırlamak için bu metod kullanılıyor.
     public void puansiz_labelleri_sifirla() {
         if (skor[0] == -1) {
             benpuan1.setText("");
@@ -319,6 +374,8 @@ public class Yahtzee extends javax.swing.JFrame {
         }
     }
 
+    //biz her oynadığımızda zarların hem yerleri hem değerleri değişebiliyor. Bütün bu değişiklikler için
+    //bu metod çağırılıyor ve zarların değerlerine göre masadaki zarların resimleri güncelliyor.
     public void masadaki_zarlarin_resimlerini_guncelle(boolean kordinatDegistir) {
         masazar1.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[0]]);
         masazar2.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[1]]);
@@ -335,18 +392,20 @@ public class Yahtzee extends javax.swing.JFrame {
         }
     }
 
+    //masadaki zarların resimlerini güncelleyen metod olur da elimizdekileri güncelleyen olmaz mı.
     public void eldeki_zarlarin_resimlerini_guncelle() {
-        benzar1.setIcon(zar_resimleri[zarlarinDegerleri[0]]);
-        benzar2.setIcon(zar_resimleri[zarlarinDegerleri[1]]);
-        benzar3.setIcon(zar_resimleri[zarlarinDegerleri[2]]);
-        benzar4.setIcon(zar_resimleri[zarlarinDegerleri[3]]);
-        benzar5.setIcon(zar_resimleri[zarlarinDegerleri[4]]);
+        benzar1.setIcon(zar_resimleri[elindekiZarlarinDegerleri[0]]);
+        benzar2.setIcon(zar_resimleri[elindekiZarlarinDegerleri[1]]);
+        benzar3.setIcon(zar_resimleri[elindekiZarlarinDegerleri[2]]);
+        benzar4.setIcon(zar_resimleri[elindekiZarlarinDegerleri[3]]);
+        benzar5.setIcon(zar_resimleri[elindekiZarlarinDegerleri[4]]);
     }
 
-    public void zarlari_at() {
-        //önce masadaki zarlara rasgele değerler alalım.
-        //sonra bu değerlere ait olan zar resimlerini alalım.
-        //masadaki zar null ise kenara ayırmış olabiliriz.
+    //önce masadaki zarlara rasgele değerler alalım.
+    //sonra bu değerlere ait olan zar resimlerini alalım.
+    //masadaki zar null ise kenara ayırmış elimize almış olabiliriz
+    //o yüzden değeri null olmayan zarları atıyoruz.
+    public void zarlari_at(){
         if (ortadakiZarlarinDegerleri[0] != 0) {
             ortadakiZarlarinDegerleri[0] = op.randomZarGetir();
         }
@@ -363,9 +422,10 @@ public class Yahtzee extends javax.swing.JFrame {
             ortadakiZarlarinDegerleri[4] = op.randomZarGetir();
         }
         masadaki_zarlarin_resimlerini_guncelle(true);
-
     }
 
+    //ilk olarak zarlar elimizde oluyor. Bunları ilk defa masaya atacağız.
+    //bu işlemi aşağıdaki metod yapıyor.
     public void elindeki_zarlari_at() {
         ortadakiZarlarinDegerleri[0] = op.randomZarGetir();
         ortadakiZarlarinDegerleri[1] = op.randomZarGetir();
@@ -374,25 +434,33 @@ public class Yahtzee extends javax.swing.JFrame {
         ortadakiZarlarinDegerleri[4] = op.randomZarGetir();
         masadaki_zarlarin_resimlerini_guncelle(true);
 
-        zarlarinDegerleri[0] = 0;
-        zarlarinDegerleri[1] = 0;
-        zarlarinDegerleri[2] = 0;
-        zarlarinDegerleri[3] = 0;
-        zarlarinDegerleri[4] = 0;
+        elindekiZarlarinDegerleri[0] = 0;
+        elindekiZarlarinDegerleri[1] = 0;
+        elindekiZarlarinDegerleri[2] = 0;
+        elindekiZarlarinDegerleri[3] = 0;
+        elindekiZarlarinDegerleri[4] = 0;
         eldeki_zarlarin_resimlerini_guncelle();
     }
 
+    //Bu metod sıra bize geldiğinde ilk olarak bütün zarların rasgele 
+    //değerlerle elimizde görülmesini sağlıyor. Aslında zarların atılana
+    //kadar bir değerleri yok.
     public void ilk_sira_zarlari_at() {
-        //önce masadaki zarlara rasgele değerler alalım.
-        //sonra bu değerlere ait olan zar resimlerini alalım.
-        zarlarinDegerleri[0] = op.randomZarGetir();
-        zarlarinDegerleri[1] = op.randomZarGetir();
-        zarlarinDegerleri[2] = op.randomZarGetir();
-        zarlarinDegerleri[3] = op.randomZarGetir();
-        zarlarinDegerleri[4] = op.randomZarGetir();
+        elindekiZarlarinDegerleri[0] = op.randomZarGetir();
+        elindekiZarlarinDegerleri[1] = op.randomZarGetir();
+        elindekiZarlarinDegerleri[2] = op.randomZarGetir();
+        elindekiZarlarinDegerleri[3] = op.randomZarGetir();
+        elindekiZarlarinDegerleri[4] = op.randomZarGetir();
+        ortadakiZarlarinDegerleri[0] = 0;
+        ortadakiZarlarinDegerleri[1] = 0;
+        ortadakiZarlarinDegerleri[2] = 0;
+        ortadakiZarlarinDegerleri[3] = 0;
+        ortadakiZarlarinDegerleri[4] = 0;
         eldeki_zarlarin_resimlerini_guncelle();
     }
 
+    //oyun sıramız bittiğinde herşeyi sıfırlayan metod.
+    //zarlar görülmesin gereksiz yere.
     public void butun_zarlari_sifirla() {
         rakipzar1.setIcon(zar_resimleri[0]);
         rakipzar2.setIcon(zar_resimleri[0]);
@@ -401,14 +469,16 @@ public class Yahtzee extends javax.swing.JFrame {
         rakipzar5.setIcon(zar_resimleri[0]);
 
         for (int i = 0; i < 5; i++) {
-            zarlarinDegerleri[i] = 0;
+            elindekiZarlarinDegerleri[i] = 0;
             ortadakiZarlarinDegerleri[i] = 0;
         }
-
         masadaki_zarlarin_resimlerini_guncelle(true);
         eldeki_zarlarin_resimlerini_guncelle();
     }
 
+    //eğer bir puan seçmişsek bu puanın bizim skor dizimize kaydedilmesi gerekiyor
+    //seçtiğimiz puanı diziye ekliyor ve üzerinde seçilmek için puan görünen 
+    //ama aslında puanı olmayan labelleri sıfırlıyor.
     public void puani_ekle(int puan, int index) {
         skor[index] = puan;
         zarla.setEnabled(false);
@@ -547,24 +617,26 @@ public class Yahtzee extends javax.swing.JFrame {
 
         butun_zarlari_sifirla();
         //mesajı rakibe gönderelim.
-        Message msg = new Message(Message.Message_Type.Selected);
+        Message msg = new Message(Message.Message_Type.Play);
         msg.content = rakibeMesaj;
         Client.Send(msg);
         bitis_kontrol();
     }
 
+    //oyunun bitip bitmediğinin kontrolünü yapıyor.
     public void bitis_kontrol() {
         if (bittiMi == 13 && rakipBittiMi == 13) {
             kim_kazandi();
             zarla.setEnabled(false);
             islemSirasi = -1;
-            durum.setText("Oyun Bitti.");
+            durum.setText("Oyun Bitti. Yeni oyun için yeniden başlatın.");
             Message msg = new Message(Message.Message_Type.Bitis);
             Client.Send(msg);
             baglanbutton.setEnabled(true);
         }
     }
 
+    //oyun bitmişse kim kazanmış bunu belirleyen metod.
     public void kim_kazandi() {
         String kazanan = "";
         if (Integer.parseInt(benpuan16.getText()) > Integer.parseInt(rakippuan16.getText())) {
@@ -575,6 +647,7 @@ public class Yahtzee extends javax.swing.JFrame {
             kazanan = "BERABERE";
         }
         JOptionPane.showMessageDialog(null, ("Puanın: " + benpuan16.getText() + " Rakip: " + rakippuan16.getText() + " \nKazanan: " + kazanan), "OYUN BİTTİ", JOptionPane.INFORMATION_MESSAGE);
+        Reset();
     }
 
     public void Reset() {
@@ -583,25 +656,27 @@ public class Yahtzee extends javax.swing.JFrame {
                 Client.Stop();
             }
         }
-        //oyun bitiminde hangi şeyler enable false olacaksa onlar oluyor.
     }
 
+    //bir zarı hareket ettirmişsek rakibe bunun bilgisini gönderiyoruz ki
+    //rakip sürekli olarak oynayış adımlarımızı görebilsin.
     public void rakibe_oynadigini_gonder() {
-        Message msg = new Message(Message.Message_Type.Selected);
+        Message msg = new Message(Message.Message_Type.Play);
         msg.content = "Z|"
                 + ortadakiZarlarinDegerleri[0]
                 + ortadakiZarlarinDegerleri[1]
                 + ortadakiZarlarinDegerleri[2]
                 + ortadakiZarlarinDegerleri[3]
                 + ortadakiZarlarinDegerleri[4]
-                + zarlarinDegerleri[0]
-                + zarlarinDegerleri[1]
-                + zarlarinDegerleri[2]
-                + zarlarinDegerleri[3]
-                + zarlarinDegerleri[4];
+                + elindekiZarlarinDegerleri[0]
+                + elindekiZarlarinDegerleri[1]
+                + elindekiZarlarinDegerleri[2]
+                + elindekiZarlarinDegerleri[3]
+                + elindekiZarlarinDegerleri[4];
         Client.Send(msg);
     }
 
+    //rakibin oynadığı adımları gösteren metod.
     public void rakibin_oynayisi_goster(String zarlar) {
         ortadakiZarlarinDegerleri[0] = Integer.parseInt(zarlar.charAt(6) + "");
         ortadakiZarlarinDegerleri[1] = Integer.parseInt(zarlar.charAt(5) + "");
@@ -1179,6 +1254,7 @@ public class Yahtzee extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    //butona tıklandığında serverla bağlantı kuruyor.
     private void baglanbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_baglanbuttonActionPerformed
         try {
             //bağlanılacak server ve portu veriyoruz
@@ -1186,7 +1262,7 @@ public class Yahtzee extends javax.swing.JFrame {
             //başlangıç durumları
             durum.setText("Durum: Rakip Bekleniyor...");
             baglanbutton.setEnabled(false);
-            Message msg = new Message(Message.Message_Type.Startt);
+            Message msg = new Message(Message.Message_Type.Start);
             Client.Send(msg);
         } catch (Exception e) {
             baglanbutton.setEnabled(true);
@@ -1201,12 +1277,15 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        //client ilk açıldığında verilmesi gereken default değerlerin
+        //atamasını yapıyoruz.
         zarla.setEnabled(false);
-        //masadaki zarların değerlerini atıyoruz.
+        //masadaki ve eldeki zarların default değerlerini atıyoruz.
         for (int i = 0; i < 5; i++) {
-            zarlarinDegerleri[i] = 0;
+            elindekiZarlarinDegerleri[i] = 0;
             ortadakiZarlarinDegerleri[i] = 0;
         }
+        //-1 olan bütün skorlar boş demektir.
         for (int i = 0; i < 16; i++) {
             skor[i] = -1;
             rakipSkor[i] = -1;
@@ -1262,11 +1341,15 @@ public class Yahtzee extends javax.swing.JFrame {
         rakibe_oynadigini_gonder();
     }//GEN-LAST:event_zarlaActionPerformed
 
+    //zarlara tıklandığında bir takım işlemlerin yapılması gerek
+    //örneğin masadaki zara tıklanmışsa elimize gelmeli ve puan kontrolü
+    //gerekiyorsa yapılmalı, yada elimizdeki zara tıklanmışsa zar masaya gitmeli
+    //ve her durumda oynayışımız rakibe gönderilmeli.
     private void benzar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar1MouseClicked
         if (ortadakiZarlarinDegerleri[0] == 0 && islemSirasi > 2 && islemSirasi < 6) {
-            masazar1.setIcon(zar_resimleri[zarlarinDegerleri[0]]);
-            ortadakiZarlarinDegerleri[0] = zarlarinDegerleri[0];
-            zarlarinDegerleri[0] = 0;
+            masazar1.setIcon(zar_resimleri[elindekiZarlarinDegerleri[0]]);
+            ortadakiZarlarinDegerleri[0] = elindekiZarlarinDegerleri[0];
+            elindekiZarlarinDegerleri[0] = 0;
             benzar1.setIcon(zar_resimleri[0]);
             masazar1.setLocation(op.addToX(), op.addToY());
             kontrol_et();
@@ -1276,9 +1359,9 @@ public class Yahtzee extends javax.swing.JFrame {
 
     private void benzar2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar2MouseClicked
         if (ortadakiZarlarinDegerleri[1] == 0 && islemSirasi > 2 && islemSirasi < 6) {
-            masazar2.setIcon(zar_resimleri[zarlarinDegerleri[1]]);
-            ortadakiZarlarinDegerleri[1] = zarlarinDegerleri[1];
-            zarlarinDegerleri[1] = 0;
+            masazar2.setIcon(zar_resimleri[elindekiZarlarinDegerleri[1]]);
+            ortadakiZarlarinDegerleri[1] = elindekiZarlarinDegerleri[1];
+            elindekiZarlarinDegerleri[1] = 0;
             benzar2.setIcon(zar_resimleri[0]);
             masazar2.setLocation(100 + op.addToX(), op.addToY());
             kontrol_et();
@@ -1288,9 +1371,9 @@ public class Yahtzee extends javax.swing.JFrame {
 
     private void benzar3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar3MouseClicked
         if (ortadakiZarlarinDegerleri[2] == 0 && islemSirasi > 2 && islemSirasi < 6) {
-            masazar3.setIcon(zar_resimleri[zarlarinDegerleri[2]]);
-            ortadakiZarlarinDegerleri[2] = zarlarinDegerleri[2];
-            zarlarinDegerleri[2] = 0;
+            masazar3.setIcon(zar_resimleri[elindekiZarlarinDegerleri[2]]);
+            ortadakiZarlarinDegerleri[2] = elindekiZarlarinDegerleri[2];
+            elindekiZarlarinDegerleri[2] = 0;
             benzar3.setIcon(zar_resimleri[0]);
             masazar3.setLocation(200 + op.addToX(), op.addToY());
             kontrol_et();
@@ -1300,9 +1383,9 @@ public class Yahtzee extends javax.swing.JFrame {
 
     private void benzar4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar4MouseClicked
         if (ortadakiZarlarinDegerleri[3] == 0 && islemSirasi > 2 && islemSirasi < 6) {
-            masazar4.setIcon(zar_resimleri[zarlarinDegerleri[3]]);
-            ortadakiZarlarinDegerleri[3] = zarlarinDegerleri[3];
-            zarlarinDegerleri[3] = 0;
+            masazar4.setIcon(zar_resimleri[elindekiZarlarinDegerleri[3]]);
+            ortadakiZarlarinDegerleri[3] = elindekiZarlarinDegerleri[3];
+            elindekiZarlarinDegerleri[3] = 0;
             benzar4.setIcon(zar_resimleri[0]);
             masazar4.setLocation(300 + op.addToX(), op.addToY());
             kontrol_et();
@@ -1312,9 +1395,9 @@ public class Yahtzee extends javax.swing.JFrame {
 
     private void benzar5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benzar5MouseClicked
         if (ortadakiZarlarinDegerleri[4] == 0 && islemSirasi > 2 && islemSirasi < 6) {
-            masazar5.setIcon(zar_resimleri[zarlarinDegerleri[4]]);
-            ortadakiZarlarinDegerleri[4] = zarlarinDegerleri[4];
-            zarlarinDegerleri[4] = 0;
+            masazar5.setIcon(zar_resimleri[elindekiZarlarinDegerleri[4]]);
+            ortadakiZarlarinDegerleri[4] = elindekiZarlarinDegerleri[4];
+            elindekiZarlarinDegerleri[4] = 0;
             benzar5.setIcon(zar_resimleri[0]);
             masazar5.setLocation(400 + op.addToX(), op.addToY());
             kontrol_et();
@@ -1323,9 +1406,9 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_benzar5MouseClicked
 
     private void masazar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar1MouseClicked
-        if (zarlarinDegerleri[0] == 0 && islemSirasi > 2 && islemSirasi < 6) {
+        if (elindekiZarlarinDegerleri[0] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar1.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[0]]);
-            zarlarinDegerleri[0] = ortadakiZarlarinDegerleri[0];
+            elindekiZarlarinDegerleri[0] = ortadakiZarlarinDegerleri[0];
             ortadakiZarlarinDegerleri[0] = 0;
             masazar1.setIcon(zar_resimleri[0]);
             kontrol_et();
@@ -1334,9 +1417,9 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar1MouseClicked
 
     private void masazar2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar2MouseClicked
-        if (zarlarinDegerleri[1] == 0 && islemSirasi > 2 && islemSirasi < 6) {
+        if (elindekiZarlarinDegerleri[1] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar2.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[1]]);
-            zarlarinDegerleri[1] = ortadakiZarlarinDegerleri[1];
+            elindekiZarlarinDegerleri[1] = ortadakiZarlarinDegerleri[1];
             ortadakiZarlarinDegerleri[1] = 0;
             masazar2.setIcon(zar_resimleri[0]);
             kontrol_et();
@@ -1345,9 +1428,9 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar2MouseClicked
 
     private void masazar3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar3MouseClicked
-        if (zarlarinDegerleri[2] == 0 && islemSirasi > 2 && islemSirasi < 6) {
+        if (elindekiZarlarinDegerleri[2] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar3.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[2]]);
-            zarlarinDegerleri[2] = ortadakiZarlarinDegerleri[2];
+            elindekiZarlarinDegerleri[2] = ortadakiZarlarinDegerleri[2];
             ortadakiZarlarinDegerleri[2] = 0;
             masazar3.setIcon(zar_resimleri[0]);
             kontrol_et();
@@ -1356,9 +1439,9 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar3MouseClicked
 
     private void masazar4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar4MouseClicked
-        if (zarlarinDegerleri[3] == 0 && islemSirasi > 2 && islemSirasi < 6) {
+        if (elindekiZarlarinDegerleri[3] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar4.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[3]]);
-            zarlarinDegerleri[3] = ortadakiZarlarinDegerleri[3];
+            elindekiZarlarinDegerleri[3] = ortadakiZarlarinDegerleri[3];
             ortadakiZarlarinDegerleri[3] = 0;
             masazar4.setIcon(zar_resimleri[0]);
             kontrol_et();
@@ -1367,9 +1450,9 @@ public class Yahtzee extends javax.swing.JFrame {
     }//GEN-LAST:event_masazar4MouseClicked
 
     private void masazar5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_masazar5MouseClicked
-        if (zarlarinDegerleri[4] == 0 && islemSirasi > 2 && islemSirasi < 6) {
+        if (elindekiZarlarinDegerleri[4] == 0 && islemSirasi > 2 && islemSirasi < 6) {
             benzar5.setIcon(zar_resimleri[ortadakiZarlarinDegerleri[4]]);
-            zarlarinDegerleri[4] = ortadakiZarlarinDegerleri[4];
+            elindekiZarlarinDegerleri[4] = ortadakiZarlarinDegerleri[4];
             ortadakiZarlarinDegerleri[4] = 0;
             masazar5.setIcon(zar_resimleri[0]);
             kontrol_et();
@@ -1377,6 +1460,7 @@ public class Yahtzee extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_masazar5MouseClicked
 
+    //puan seçileceği zaman bunlar devreye giriyor.
     private void benpuan1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_benpuan1MouseClicked
         if (skor[0] == -1 && islemSirasi > 2 && islemSirasi < 6) {
             puani_ekle(Integer.parseInt(benpuan1.getText()), 0);

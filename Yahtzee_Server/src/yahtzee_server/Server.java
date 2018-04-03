@@ -75,16 +75,13 @@ public class Server {
 
     }
 
-    // serverdan clietlara mesaj gönderme
-    //clieti alıyor ve mesaj olluyor
+    //serverdan clietlara mesaj gönderme
+    //clieti alıyor ve mesaj yolluyor
     public static void Send(SClient cl, Message msg) {
-
         try {
             cl.sOutput.writeObject(msg);
         } catch (IOException ex) {
             Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
-
 }

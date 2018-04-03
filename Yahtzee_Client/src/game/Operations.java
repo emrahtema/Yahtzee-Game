@@ -1,10 +1,12 @@
 package game;
 
 import java.util.Random;
-import javax.swing.ImageIcon;
 
 public class Operations {
     
+    //bu method elimizdeki zarların puanlarını hesaplayıp bir dizi olarak döndürüyor.
+    //dizideki her bir eleman, oyun kısmında her bir puan türüyle sıralı olarak
+    //eşleştiriliyor.
     public int[] puanlariGetir(int[] zarlar){
         int[] puanlar = new int[13];
         int count1=0,count2=0,count3=0,count4=0,count5=0,count6=0;
@@ -88,8 +90,9 @@ public class Operations {
         return puanlar;
     }
     
-    //10dan 80e kadar Y
-    //10dan 25e kadar X
+    
+    //masaya zar attığımızda masadaki zarların hep aynı konumda olmaması için
+    //her atışta onlara random konum bilgisi göndereceğiz.
     public int addToX(){
         Random rnd = new Random();
         return rnd.nextInt(15) + 10;
@@ -99,6 +102,7 @@ public class Operations {
         return rnd.nextInt(80) + 10;
     }
     
+    //random metodu, rasgele zar sayısı üretecek.
     public int randomZarGetir(){
         Random rnd = new Random();
         return rnd.nextInt(6) + 1;

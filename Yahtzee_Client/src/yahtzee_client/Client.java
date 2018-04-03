@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package yahtzee_client;
 
 import game.Message;
@@ -15,10 +10,6 @@ import java.util.logging.Logger;
 import static yahtzee_client.Client.sInput;
 import game.Yahtzee;
 
-/**
- *
- * @author INSECT
- */
 // serverdan gelecek mesajları dinleyen thread
 class Listen extends Thread {
 
@@ -31,7 +22,7 @@ class Listen extends Thread {
                 //mesaj gelirse bu satıra geçer
                 //mesaj tipine göre yapılacak işlemi ayır.
                 switch (received.type) {
-                    case Startt:
+                    case Start:
                         break;
                     case RivalConnected:
                         Yahtzee.ThisGame.durum.setText(received.content.toString());
@@ -39,12 +30,11 @@ class Listen extends Thread {
                         break;
                     case Disconnect:
                         break;
-                    case Selected:
-                        Yahtzee.ThisGame.islem = received.content.toString();
+                    case Play:
+                        Yahtzee.ThisGame.gelenMesaj = received.content.toString();
                         break;
                     case Bitis:
                         break;
-
                 }
 
             } catch (IOException ex) {
@@ -58,7 +48,6 @@ class Listen extends Thread {
                 break;
             }
         }
-
     }
 }
 
@@ -85,12 +74,8 @@ public class Client {
             Client.sOutput = new ObjectOutputStream(Client.socket.getOutputStream());
             Client.listenMe = new Listen();
             Client.listenMe.start();
-
-            //ilk mesaj olarak isim gönderiyorum
-//            Message msg = new Message(Message.Message_Type.Name);
-//            msg.content = Game.ThisGame.txt_name.getText();
-//            Client.Send(msg);
-        } catch (IOException ex) {/*Server ile bağlantı kurulamamış, hata verme*/
+        } catch (IOException ex) {
+            //Server ile bağlantı kurulamamış hata verme.
         }
     }
 

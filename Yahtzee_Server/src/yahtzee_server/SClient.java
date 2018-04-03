@@ -1,24 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package yahtzee_server;
 
 import game.Message;
-import static game.Message.Message_Type.Selected;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import static java.lang.Thread.sleep;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static game.Message.Message_Type.Play;
+import static java.lang.Thread.sleep;
 
-/**
- *
- * @author INSECT
- */
 public class SClient {
 
     int id;
@@ -56,7 +47,6 @@ public class SClient {
         } catch (IOException ex) {
             Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     //client dinleme threadi
@@ -64,7 +54,6 @@ public class SClient {
     class Listen extends Thread {
 
         SClient TheClient;
-
         //thread nesne alması için yapıcı metod
         Listen(SClient TheClient) {
             this.TheClient = TheClient;
@@ -79,13 +68,13 @@ public class SClient {
                     //mesaj gelirse bu satıra geçer
                     //mesaj tipine göre işlemlere ayır                 
                     switch (received.type) {
-                        case Startt:
+                        case Start:
                             //eşleştirme işlemine başla
                             TheClient.pairThread.start();
                             break;
                         case Disconnect:
                             break;
-                        case Selected:
+                        case Play:
                             //gelen seçim yapıldı mesajını rakibe gönder
                             Server.Send(TheClient.rival, received);
                             break;
@@ -93,16 +82,18 @@ public class SClient {
                             break;
                     }
 
-                } catch (IOException ex) {
+                } catch (Exception e) {
                     //client bağlantısı koparsa listeden sil
                     Server.Clients.remove(TheClient);
-
-                } catch (ClassNotFoundException ex) {
-                    //client bağlantısı koparsa listeden sil
-                    Server.Clients.remove(TheClient);
+                    Message msg = new Message(Message.Message_Type.Play);
+                    msg.content = "Start|-1~";//rakip oyundan çıktı mesajı
+                    Server.Send(TheClient.rival, msg);
+                    Server.Clients.remove(TheClient.rival);
+                    TheClient.rival.pairThread.stop();
+                    TheClient.rival.listenThread.stop();
+                    break;
                 }
             }
-
         }
     }
 
@@ -111,7 +102,6 @@ public class SClient {
     class PairingThread extends Thread {
 
         SClient TheClient;
-
         PairingThread(SClient TheClient) {
             this.TheClient = TheClient;
         }
@@ -157,23 +147,22 @@ public class SClient {
                         msg2.content = "Durum: Oyun Bulundu...";
                         Server.Send(TheClient, msg2);
                         
-                        //ilk kim başlıyor
-                        msg1 = new Message(Message.Message_Type.Selected);
+                        //ilk kim başlıyor, tabiki ilk bağlanan o kadar beklemiş
+                        msg1 = new Message(Message.Message_Type.Play);
                         msg1.content = "Start|0~";
                         Server.Send(TheClient.rival, msg1);
 
-                        msg2 = new Message(Message.Message_Type.Selected);
+                        msg2 = new Message(Message.Message_Type.Play);
                         msg2.content = "Start|1~";
                         Server.Send(TheClient, msg2);
-                        
                     }
                     //lock mekanizmasını servest bırak
                     //bırakılmazsa deadlock olur.
                     Server.pairTwo.release(1);
                 } catch (InterruptedException ex) {
+                    //do nothing
                 }
             }
         }
     }
-
 }

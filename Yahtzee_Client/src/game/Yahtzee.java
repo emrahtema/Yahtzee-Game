@@ -2,6 +2,10 @@ package game;
 
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -39,6 +43,7 @@ public class Yahtzee extends javax.swing.JFrame {
 
     public Yahtzee() {
         initComponents();
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/icon.png")));
         op = new Operations();
         ThisGame = this;
         try {
@@ -760,6 +765,7 @@ public class Yahtzee extends javax.swing.JFrame {
         zarla = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Yahtzee");
         setMaximumSize(new java.awt.Dimension(920, 650));
         setMinimumSize(new java.awt.Dimension(920, 650));
         setPreferredSize(new java.awt.Dimension(920, 650));
@@ -1322,18 +1328,19 @@ public class Yahtzee extends javax.swing.JFrame {
         benzar3.setText("");
         benzar4.setText("");
         benzar5.setText("");
+
     }//GEN-LAST:event_formWindowOpened
 
     private void zarlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zarlaActionPerformed
         op = new Operations();
         if (islemSirasi == 2) {
-            islemSirasi++;
+            islemSirasi=3;
             elindeki_zarlari_at();
         } else if (islemSirasi == 3) {
-            islemSirasi++;
+            islemSirasi=4;
             zarlari_at();
         } else if (islemSirasi == 4) {
-            islemSirasi++;
+            islemSirasi=5;
             zarlari_at();
             zarla.setEnabled(false);
         }

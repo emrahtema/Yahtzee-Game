@@ -1,2 +1,2 @@
-# Yahtzee Server Clients
-The First Project of Computer Networks.
+# Yahtzee Game
+Yahtzee oyunu server-client mimarisi kullanılarak Java dilinde tasarlanmış olup, oyuna bağlanan sunucuları ikili olarak eşleştirip oyunu oynamalarını sağlayabilmektedir.
